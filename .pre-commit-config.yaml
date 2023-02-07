@@ -59,4 +59,5 @@ repos:
   rev: 1.5.0
   hooks:
   - id: interrogate
-    args: [--verbose, --fail-under=0]
+    exclude: ^(docs/conf.py|setup.py|tests)
+    args: [--config=setup.cfg, --verbose, --fail-under=90, --ignore-module]
