@@ -1,0 +1,9 @@
+# Requirements file for ReadTheDocs, check .readthedocs.yml.
+# To build the module reference correctly, make sure every external package
+# under `install_requires` in `setup.cfg` is also listed here!
+myst-parser[linkify]
+sphinx>=3.2.1
+sphinx-autodoc-typehints~=1.21
+sphinx-rtd-theme~=1.0
+apache-airflow~=2.4
+sevenbridges-python~=2.9
