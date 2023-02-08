@@ -3,7 +3,8 @@ from functools import cached_property
 from airflow.hooks.base import BaseHook
 from sevenbridges import Api
 
-from orca.services.sevenbridges import SevenBridgesClientFactory, SevenBridgesTasks
+from orca.services.sevenbridges.client_factory import SevenBridgesClientFactory
+from orca.services.sevenbridges.tasks import SevenBridgesTasks
 
 
 class SevenBridgesHook(BaseHook):
