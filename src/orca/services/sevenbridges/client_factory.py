@@ -1,5 +1,3 @@
-"""Convenience functions for constructing SevenBridges clients."""
-
 import os
 from dataclasses import dataclass, field
 from functools import cached_property

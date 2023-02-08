@@ -1,9 +1,3 @@
-"""Airflow hook for SevenBridges.
-
-This hook was inspired by the Asana Airflow provider package:
-https://github.com/apache/airflow/blob/main/airflow/providers/asana/hooks/asana.py
-"""
-
 from functools import cached_property
 
 from airflow.hooks.base import BaseHook
@@ -14,7 +8,11 @@ from orca.services.sevenbridges.tasks import SevenBridgesTasks
 
 
 class SevenBridgesHook(BaseHook):
-    """Wrapper around SevenBridges client."""
+    """Wrapper around SevenBridges client and tasks classes.
+
+    This hook was inspired by the Asana Airflow provider package:
+    https://github.com/apache/airflow/blob/main/airflow/providers/asana/hooks/asana.py
+    """
 
     conn_name_attr = "sbg_conn_id"
     default_conn_name = "sbg_default"
