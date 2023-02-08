@@ -1,6 +1,6 @@
 import pytest
 
-from orca.services.sevenbridges.tasks import SevenBridgesTasks
+from orca.services.sevenbridges import SevenBridgesTasks
 
 
 @pytest.mark.usefixtures("patch_os_environ")

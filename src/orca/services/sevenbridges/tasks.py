@@ -5,7 +5,7 @@ from typing import Any, Optional
 
 from sevenbridges import Api
 
-from orca.services.sevenbridges.client_factory import SevenBridgesClientFactory
+from orca.services.sevenbridges import SevenBridgesClientFactory
 
 
 @dataclass

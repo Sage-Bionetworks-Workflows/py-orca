@@ -4,7 +4,7 @@ from sevenbridges import Api
 from sevenbridges.http.error_handlers import maintenance_sleeper, rate_limit_sleeper
 
 from orca.errors import ClientArgsError, ClientRequestError
-from orca.services.sevenbridges.client_factory import SevenBridgesClientFactory
+from orca.services.sevenbridges import SevenBridgesClientFactory
 
 
 @pytest.mark.usefixtures("patch_os_environ")

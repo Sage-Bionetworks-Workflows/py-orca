@@ -1,8 +1,7 @@
 import pytest
 from sevenbridges import Api
 
-from orca.services.sevenbridges.hook import SevenBridgesHook
-from orca.services.sevenbridges.tasks import SevenBridgesTasks
+from orca.services.sevenbridges import SevenBridgesHook, SevenBridgesTasks
 
 
 @pytest.mark.usefixtures("patch_get_connection")
