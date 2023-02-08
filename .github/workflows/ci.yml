@@ -1,0 +1,150 @@
+# GitHub Actions configuration **EXAMPLE**,
+# MODIFY IT ACCORDING TO YOUR NEEDS!
+# Reference: https://docs.github.com/en/actions
+
+name: tests
+
+on:
+  push:
+    # Avoid using all the resources/limits available by checking only
+    # relevant branches and tags. Other branches can be checked via PRs.
+    branches: [main]
+    tags: ['v[0-9]*', '[0-9]+.[0-9]+*']  # Match tags that resemble a version
+  pull_request:  # Run in every PR
+  workflow_dispatch:  # Allow manually triggering the workflow
+  schedule:
+    # Run roughly every 15 days at 00:00 UTC
+    # (useful to check if updates on dependencies break the package)
+    - cron: '0 0 1,16 * *'
+
+concurrency:
+  group: >-
+    ${{ github.workflow }}-${{ github.ref_type }}-
+    ${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      wheel-path: ${{ steps.distribution-paths.outputs.wheel }}
+      tarball-path: ${{ steps.distribution-paths.outputs.tarball }}
+    steps:
+      - uses: actions/checkout@v3
+        with: {fetch-depth: 0}  # deep clone for setuptools-scm
+      - uses: actions/setup-python@v4
+        with: {python-version: "3.11"}
+      - name: Run static analysis and format checkers
+        run: pipx run pre-commit run --all-files --show-diff-on-failure
+      - name: Build package distribution files
+        run: pipx run --spec 'tox~=3.0' tox -e clean,build
+      - name: Record the paths of wheel and source tarball distributions
+        id: distribution-paths
+        run: |
+          echo "wheel=$(ls dist/*.whl)" >> $GITHUB_OUTPUT
+          echo "tarball=$(ls dist/*.tar.gz)" >> $GITHUB_OUTPUT
+      - name: Store the distribution files for use in other stages
+        # `tests`, `pypi-publish`, and `docker-publish` will use the same
+        # pre-built distributions, so we make sure to release the exact
+        # same package that was tested
+        uses: actions/upload-artifact@v3
+        with:
+          name: python-distribution-files
+          path: dist/
+          retention-days: 1
+
+  test:
+    needs: prepare
+    strategy:
+      matrix:
+        python:
+        - "3.8"
+        - "3.11"  # newest Python that is stable
+        platform:
+        - ubuntu-latest
+        - macos-latest
+        # TODO: Debug the Windows issues
+        # - windows-latest
+    env:
+      OS: ${{ matrix.platform }}
+      PYTHON: ${{ matrix.python }}
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/download-artifact@v3
+        with: {name: python-distribution-files, path: dist/}
+      - name: Run tests
+        env:
+          SYNAPSE_AUTH_TOKEN: ${{ secrets.SYNAPSE_AUTH_TOKEN }}
+        run: >-
+          pipx run --spec 'tox~=3.0' tox
+          --installpkg '${{ needs.prepare.outputs.wheel-path }}'
+          -- -rFEx --durations 10 --color yes
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          # CodeCov can be flaky, so this step is not required for success
+          fail_ci_if_error: false
+          files: coverage.xml
+          # Using matrix pattern from `codecov/codecov-action` README:
+          # https://github.com/codecov/codecov-action#example-workflowyml-with-codecov-action
+          env_vars: OS,PYTHON
+          verbose: true
+
+  pypi-publish:
+    needs: [prepare, test]
+    if: ${{ github.event_name == 'push' && contains(github.ref, 'refs/tags/') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with: {python-version: "3.11"}
+      - uses: actions/download-artifact@v3
+        with: {name: python-distribution-files, path: dist/}
+      - name: Publish Python Package to PyPI
+        env:
+          TWINE_REPOSITORY: pypi
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+        run: pipx run --spec 'tox!=3.0' tox -e publish
+
+  docker-publish:
+    needs: [prepare, test]
+    if: ${{ github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/download-artifact@v3
+        with: {name: python-distribution-files, path: dist/}
+      - uses: docker/setup-qemu-action@v2
+      - uses: docker/setup-buildx-action@v2
+      - uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: |
+            ghcr.io/${{ github.repository }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=ref,event=branch
+            type=sha
+      - name: Publish Python Package to Docker Hub and GHCR
+        uses: docker/build-push-action@v3
+        with:
+          platforms: linux/amd64,linux/arm64
+          context: .
+          file: src/docker/Dockerfile
+          build-args: |
+            TARBALL_PATH=${{ needs.prepare.outputs.tarball-path }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
