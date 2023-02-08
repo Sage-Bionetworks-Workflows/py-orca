@@ -78,7 +78,7 @@ jobs:
         with: {name: python-distribution-files, path: dist/}
       - name: Run tests
         env:
-          SYNAPSE_AUTH_TOKEN: ${{ secrets.SYNAPSE_AUTH_TOKEN }}
+          SEVENBRIDGES_CONNECTION_URI: ${{ secrets.SEVENBRIDGES_CONNECTION_URI }}
         run: >-
           pipx run --spec 'tox~=3.0' tox
           --installpkg '${{ needs.prepare.outputs.wheel-path }}'
