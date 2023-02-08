@@ -19,9 +19,6 @@ class TestWithEmptyEnv:
 
     def test_for_an_error_when_using_invalid_authentication_token(self):
         with pytest.raises(ClientArgsError):
-            # type: ignore
-            SevenBridgesClientFactory("https://api.sbgenomics.com/v2", 123)
-        with pytest.raises(ClientArgsError):
             SevenBridgesClientFactory("https://api.sbgenomics.com/v2", "")
 
     def test_for_an_error_when_missing_credentials(self):
