@@ -63,8 +63,6 @@ jobs:
         platform:
         - ubuntu-latest
         - macos-latest
-        # TODO: Debug the Windows issues
-        # - windows-latest
     env:
       OS: ${{ matrix.platform }}
       PYTHON: ${{ matrix.python }}
@@ -78,6 +76,7 @@ jobs:
         with: {name: python-distribution-files, path: dist/}
       - name: Run tests
         env:
+          # New variables should match a `passenv` pattern under `[testenv]` in tox.ini
           SEVENBRIDGES_CONNECTION_URI: ${{ secrets.SEVENBRIDGES_CONNECTION_URI }}
         run: >-
           pipx run --spec 'tox~=3.0' tox
