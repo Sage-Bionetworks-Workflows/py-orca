@@ -1,14 +1,15 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any, Optional
 
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
 from sevenbridges import Api
 
 from orca.services.sevenbridges.client_factory import SevenBridgesClientFactory
 
 
-@dataclass
+@dataclass(config=ConfigDict(arbitrary_types_allowed=True), kw_only=False)
 class SevenBridgesTasks:
     """Common tasks for SevenBridges platforms.
 

@@ -4,7 +4,9 @@
 
 apache-airflow~=2.4
 myst-parser[linkify]
+pydantic~=1.10
 sevenbridges-python~=2.9
 sphinx>=3.2.1
 sphinx-autodoc-typehints~=1.21
 sphinx-rtd-theme~=1.0
+sqlalchemy<2.0

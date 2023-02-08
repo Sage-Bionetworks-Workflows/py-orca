@@ -21,5 +21,11 @@ hook.py
     class from `tasks.py` using the credentials defined by an Airflow
     connection. These hook classes are deliberately thin wrappers around
     the tasks classes. The aim here is to minimize Airflow-specific
-    code, which is harder to test.
+    code, which is harder to test. This hook also takes advantage of
+    extra field associated with connection objects to configure the
+    underlying client and/or tasks objects. Whether to include a value
+    as the extra connection field probably depends on whether that
+    value is useful to change the overall state of the underlying
+    client and/or tasks objects (e.g., `project` for SevenBridgesTasks)
+    and whether the value is invariable for a given DAG.
 """

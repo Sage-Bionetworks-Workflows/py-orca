@@ -1,16 +1,17 @@
 import os
-from dataclasses import dataclass, field
+from dataclasses import field
 from functools import cached_property
 from typing import Any, Optional
 
 from airflow.models.connection import Connection
+from pydantic.dataclasses import dataclass
 from sevenbridges import Api
 from sevenbridges.http.error_handlers import maintenance_sleeper, rate_limit_sleeper
 
 from orca.errors import ClientArgsError, ClientRequestError
 
 
-@dataclass
+@dataclass(kw_only=False)
 class SevenBridgesClientFactory:
     """Factory for constructing SevenBridges clients.
 
@@ -49,7 +50,8 @@ class SevenBridgesClientFactory:
         "https://cavatica-api.sbgenomics.com/v2",
     }
 
-    def __post_init__(self):
+    # Using `__post_init_post_parse__()` to perform steps after validation
+    def __post_init_post_parse__(self) -> None:
         """Resolve and validate credentials."""
         self.resolve_credentials()
         self.update_credentials()
@@ -78,7 +80,7 @@ class SevenBridgesClientFactory:
         }
         return kwargs
 
-    def resolve_credentials(self):
+    def resolve_credentials(self) -> None:
         """Resolve SevenBridges credentials based on priority.
 
         This method will update the attribute values (if applicable).
@@ -87,8 +89,8 @@ class SevenBridgesClientFactory:
         if os.environ.get(self.CONNECTION_ENV) is None:
             return
 
-        # Retrieve information from environment (if available)
-        env_connection_uri = os.environ.get(self.CONNECTION_ENV, "")
+        # Get value from environment, which is confirmed to be available
+        env_connection_uri = os.environ[self.CONNECTION_ENV]
         env_connection = Connection(uri=env_connection_uri)
         env_kwargs = self.map_connection(env_connection)
 
@@ -96,12 +98,12 @@ class SevenBridgesClientFactory:
         self.api_endpoint = self.api_endpoint or env_kwargs["api_endpoint"]
         self.auth_token = self.auth_token or env_kwargs["auth_token"]
 
-    def update_credentials(self):
+    def update_credentials(self) -> None:
         """Update credentials for consistency."""
         if isinstance(self.api_endpoint, str):
             self.api_endpoint = self.api_endpoint.rstrip("/")
 
-    def validate_credentials(self):
+    def validate_credentials(self) -> None:
         """Validate the currently available credential attributes.
 
         Raises:
@@ -132,7 +134,7 @@ class SevenBridgesClientFactory:
             addendum = f"Auth auth_token ({self.auth_token}) should be a string."
             raise ClientArgsError(common_message + addendum)
 
-    def update_client_kwargs(self):
+    def update_client_kwargs(self) -> None:
         """Update client keyword arguments with default values."""
         default_handlers = [rate_limit_sleeper, maintenance_sleeper]
         self.client_kwargs.setdefault("error_handlers", default_handlers)
@@ -161,7 +163,7 @@ class SevenBridgesClientFactory:
         return client
 
     @staticmethod
-    def test_client(client: Api):
+    def test_client(client: Api) -> None:
         """Test the client with an authenticated request.
 
         Raises:
