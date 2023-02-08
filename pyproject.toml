@@ -9,7 +9,13 @@ build-backend = "setuptools.build_meta"
 version_scheme = "no-guess-dev"
 
 [tool.mypy]
-disable_error_code = "type-abstract"
+plugins = [
+  "pydantic.mypy"
+]
+disable_error_code = [
+	"type-abstract",
+	"import"
+]
 
 [[tool.mypy.overrides]]
 module = "orca"

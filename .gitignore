@@ -15,6 +15,7 @@ __pycache__/*
 .DS_Store
 /tests/outputs/
 test.txt
+playground.ipynb
 
 # Project files
 .env
@@ -41,7 +42,6 @@ junit*.xml
 coverage.xml
 .pytest_cache/
 .hypothesis/
-
 
 # Build and docs folder/files
 build/*

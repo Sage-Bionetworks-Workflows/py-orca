@@ -1,3 +1,5 @@
+"""Top-level module for orca."""
+
 # isort: skip_file
 
 from importlib.metadata import PackageNotFoundError, version  # pragma: no cover
@@ -11,6 +13,7 @@ finally:
     del version, PackageNotFoundError
 
 import logging
+
 
 # Set default logging handler to avoid "No handler found" warnings
 logging.getLogger(__name__).addHandler(logging.NullHandler())
