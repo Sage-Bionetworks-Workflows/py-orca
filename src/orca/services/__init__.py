@@ -5,8 +5,11 @@ Each service has its own module with one or more submodules:
 client.py (optional):
     This submodule defines a client class that interacts with the
     service/API. Services with an existing third-party Python client
-    do not need this submodule. That said, this could also be where
-    convenience function(s) for constructing the client can be stored.
+    do not need this submodule.
+client_factory.py:
+    This submodule defines a convenience factory class that features
+    methods related to client construction, such as argument "sourcing"
+    (e.g., from environment variables) and validation.
 tasks.py:
     This submodule defines a tasks class that performs common operations
     using a third-party client or the one defined in `client.py`. These
@@ -20,8 +23,3 @@ hook.py
     the tasks classes. The aim here is to minimize Airflow-specific
     code, which is harder to test.
 """
-
-
-from orca.services.sevenbridges import *
-
-__all__ = ["SevenBridgesTasks", "SevenBridgesHook"]

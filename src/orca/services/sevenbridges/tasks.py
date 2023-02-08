@@ -5,9 +5,7 @@ from typing import Any, Optional
 
 from sevenbridges import Api
 
-from orca.services.sevenbridges.client import init_client
-
-__all__ = ["SevenBridgesTasks"]
+from orca.services.sevenbridges.client_factory import SevenBridgesClientFactory
 
 
 @dataclass
@@ -28,7 +26,7 @@ class SevenBridgesTasks:
         api_endpoint: str,
         auth_token: str,
         project: Optional[str] = None,
-        **kwargs: dict[str, Any],
+        **client_kwargs: Any,
     ) -> SevenBridgesTasks:
         """Construct SevenBridgesTasks from credentials.
 
@@ -39,11 +37,12 @@ class SevenBridgesTasks:
             project: An owner-prefixed SevenBridges project.
                 For example: <username>/<project-name>.
                 Defaults to None.
-            **kwargs: Additional keyword arguments that are passed to
-                the SevenBridges client during its construction.
+            **client_kwargs: Additional keyword arguments that are passed
+                to the SevenBridges client during its construction.
 
         Returns:
             An authenticated SevenBridgesTasks instance.
         """
-        client = init_client(api_endpoint, auth_token, **kwargs)
+        factory = SevenBridgesClientFactory(api_endpoint, auth_token, client_kwargs)
+        client = factory.get_client()
         return SevenBridgesTasks(client, project)

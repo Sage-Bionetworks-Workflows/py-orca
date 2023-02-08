@@ -14,10 +14,6 @@ finally:
 
 import logging
 
-from orca.services import *
-
-__all__ = ["SevenBridgesTasks", "SevenBridgesHook"]
-
 
 # Set default logging handler to avoid "No handler found" warnings
 logging.getLogger(__name__).addHandler(logging.NullHandler())
