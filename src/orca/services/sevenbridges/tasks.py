@@ -3,11 +3,11 @@ from __future__ import annotations
 from functools import wraps
 from typing import Any, Optional, cast
 
-from pydantic import ConfigDict
 from pydantic.dataclasses import dataclass
 from sevenbridges import Api
 from sevenbridges.models.enums import TaskStatus
 
+from orca.constants import dataclass_kwargs
 from orca.errors import OptionalAttrRequiredError, UnexpectedMatchError
 from orca.services.sevenbridges.client_factory import SevenBridgesClientFactory
 
@@ -36,7 +36,7 @@ def project_required(method):
 
 # TODO: Should I change the class suffix to "Ops" to avoid confusion
 #       with the concept of tasks in SevenBridges?
-@dataclass
+@dataclass(**dataclass_kwargs())
 class SevenBridgesTasks:
     """Common tasks for SevenBridges platforms.
 

@@ -8,10 +8,11 @@ from pydantic.dataclasses import dataclass
 from sevenbridges import Api
 from sevenbridges.http.error_handlers import maintenance_sleeper, rate_limit_sleeper
 
+from orca.constants import dataclass_kwargs
 from orca.errors import ClientArgsError, ClientRequestError
 
 
-@dataclass(kw_only=False)
+@dataclass(**dataclass_kwargs())
 class SevenBridgesClientFactory:
     """Factory for constructing SevenBridges clients.
 
