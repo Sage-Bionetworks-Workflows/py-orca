@@ -8,7 +8,7 @@ from pydantic.dataclasses import dataclass
 from sevenbridges import Api
 from sevenbridges.models.enums import TaskStatus
 
-from orca.errors import OptionalAttrRequiredError, UnexpectedMatch
+from orca.errors import OptionalAttrRequiredError, UnexpectedMatchError
 from orca.services.sevenbridges.client_factory import SevenBridgesClientFactory
 
 
@@ -88,7 +88,7 @@ class SevenBridgesTasks:
             app_id: App ID.
 
         Raises:
-            UnexpectedMatch: If a task with the given name was found
+            UnexpectedMatchError: If a task with the given name was found
                 but doesn't match the given app ID.
 
         Returns:
@@ -101,7 +101,7 @@ class SevenBridgesTasks:
             return None
         elif len(name_matches) > 1:
             message = f"Found many tasks ({name_matches}) with given name ({name})."
-            raise UnexpectedMatch(message)
+            raise UnexpectedMatchError(message)
         else:
             task = name_matches[0]
 
@@ -110,7 +110,7 @@ class SevenBridgesTasks:
                 f"Found task ({task.id}) with given name ({name}), but its app "
                 f"({task.app}) doesn't match what's expected ({app_id})."
             )
-            raise UnexpectedMatch(message)
+            raise UnexpectedMatchError(message)
 
         return task.id
 

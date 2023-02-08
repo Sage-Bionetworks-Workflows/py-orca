@@ -17,5 +17,5 @@ class OptionalAttrRequiredError(OrcaError):
     """Optional attribute is required in this context."""
 
 
-class UnexpectedMatch(OrcaError):
+class UnexpectedMatchError(OrcaError):
     """A match was found but does not meet expectations."""

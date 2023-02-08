@@ -1,6 +1,6 @@
 import pytest
 
-from orca.errors import OptionalAttrRequiredError, UnexpectedMatch
+from orca.errors import OptionalAttrRequiredError, UnexpectedMatchError
 from orca.services.sevenbridges import SevenBridgesTasks
 
 
@@ -28,13 +28,13 @@ class TestWithEmptyEnv:
 
     def test_that_none_is_returned_when_many_matches(self, mock_task, mock_tasks):
         mock_tasks.client.tasks.query.return_value = [mock_task, mock_task]
-        with pytest.raises(UnexpectedMatch):
+        with pytest.raises(UnexpectedMatchError):
             mock_tasks.get_task("foo", "bar")
 
     def test_for_an_error_when_matching_task_has_diff_app(self, mock_task, mock_tasks):
         mock_task.app = "something"
         mock_tasks.client.tasks.query.return_value = [mock_task]
-        with pytest.raises(UnexpectedMatch):
+        with pytest.raises(UnexpectedMatchError):
             mock_tasks.get_task("foo", "bar")
 
     def test_that_the_client_is_used_to_draft_a_task(self, mock_tasks):
