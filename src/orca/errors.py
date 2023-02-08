@@ -11,3 +11,11 @@ class ClientRequestError(OrcaError):
 
 class ClientArgsError(OrcaError):
     """Client arguments are missing or invalid."""
+
+
+class OptionalAttrRequiredError(OrcaError):
+    """Optional attribute is required in this context."""
+
+
+class UnexpectedMatch(OrcaError):
+    """A match was found but does not meet expectations."""

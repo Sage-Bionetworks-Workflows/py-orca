@@ -2,9 +2,14 @@ from copy import copy
 
 import pytest
 from airflow.models.connection import Connection
+from sevenbridges import Task
 
-from orca.services.sevenbridges import client_factory
-from orca.services.sevenbridges.hook import SevenBridgesHook
+from orca.services.sevenbridges import (
+    SevenBridgesHook,
+    SevenBridgesTasks,
+    client_factory,
+    tasks,
+)
 
 
 @pytest.fixture
@@ -26,6 +31,22 @@ def tasks_args(client_creds):
     tasks_args = copy(client_creds)
     tasks_args["project"] = "bgrande/sandbox"
     yield tasks_args
+
+
+@pytest.fixture
+def mock_tasks(tasks_args, mocker):
+    mocker.patch.object(tasks, "SevenBridgesClientFactory", autospec=True)
+    yield SevenBridgesTasks.from_creds(**tasks_args)
+
+
+# Note that this refers to a SevenBridges task (or workflow run)
+@pytest.fixture
+def mock_task(mocker):
+    mock_task = mocker.MagicMock(Task)
+    mock_task.id = "123"
+    mock_task.name = "foo"
+    mock_task.app = "user/bar"
+    yield mock_task
 
 
 @pytest.fixture

@@ -25,4 +25,7 @@ disallow_incomplete_defs = true
 check_untyped_defs = true
 
 [tool.interrogate]
-ignore-init-method = true
+verbose = true
+fail-under = 95
+ignore-module = true
+ignore-nested-functions = true
