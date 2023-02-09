@@ -1,7 +1,7 @@
 import os
 from dataclasses import field
 from functools import cached_property
-from typing import Any, Optional
+from typing import Any, ClassVar, Optional, Type
 
 from airflow.models.connection import Connection
 from pydantic.dataclasses import dataclass
@@ -37,6 +37,9 @@ class SevenBridgesClientFactory:
         client_kwargs: Additional keyword arguments that are passed to
             the SevenBridges client during its construction.
     """
+
+    client_cls: ClassVar[Type]
+    client_cls = Api
 
     api_endpoint: Optional[str] = None
     auth_token: Optional[str] = None
@@ -142,7 +145,7 @@ class SevenBridgesClientFactory:
     @cached_property
     def _client(self) -> Api:
         """An authenticated SevenBridges client."""
-        return Api(self.api_endpoint, self.auth_token, **self.client_kwargs)
+        return self.client_cls(self.api_endpoint, self.auth_token, **self.client_kwargs)
 
     def get_client(self) -> Api:
         """Retrieve an authenticated SevenBridges client.

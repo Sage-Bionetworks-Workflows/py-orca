@@ -16,7 +16,11 @@ tasks.py:
     using a third-party client or the one defined in `client.py`. These
     classes might feature low-level methods depending on the client's
     functionality. That said, their aim is to offer high-level methods
-    that can be used for building data pipelines. That said, a important
+    that can be used for building data pipelines. Ideally, the methods
+    return as little information as possible (e.g., workflow run ID
+    instead of a workflow object) to facilitate the transfer of data
+    between tasks. This principle is motivated by Airflow's XCom system,
+    which stores these values in a database. Additionally, an important
     feature of operations available in this submodule is that they
     strive to be idempotent. In other words, they take additional steps
     to return the same output given the same input. For example, an

@@ -27,19 +27,18 @@ class TestWithEmptyEnv:
         with pytest.raises(ClientArgsError):
             SevenBridgesClientFactory(None, "bar")
 
-    def test_that_the_default_error_handlers_are_used(self, client_creds, api_mock):
-        factory = SevenBridgesClientFactory(**client_creds)
-        _ = factory.get_client()
-        _, kwargs = api_mock.call_args
+    def test_that_the_default_error_handlers_are_used(self, client_args, mock_api_init):
+        factory = SevenBridgesClientFactory(**client_args)
+        factory.get_client()
+        _, kwargs = mock_api_init.call_args
         assert "error_handlers" in kwargs
         handlers = kwargs["error_handlers"]
         assert maintenance_sleeper in handlers
         assert rate_limit_sleeper in handlers
 
 
-@pytest.mark.slow
-def test_that_a_nonempty_connection_can_be_mapped(connection, client_creds):
-    expected = client_creds
+def test_that_a_nonempty_connection_can_be_mapped(connection, client_args):
+    expected = client_args
     actual = SevenBridgesClientFactory.map_connection(connection)
     assert actual == expected
 
@@ -60,8 +59,8 @@ def test_that_a_valid_client_can_be_constructed_and_tested():
 
 
 @pytest.mark.integration
-def test_for_an_error_when_constructing_and_testing_an_invalid_client(client_creds):
+def test_for_an_error_when_constructing_and_testing_an_invalid_client(client_args):
     # Authenticate using the environment variable
-    factory = SevenBridgesClientFactory(client_creds["api_endpoint"], "foo")
+    factory = SevenBridgesClientFactory(client_args["api_endpoint"], "foo")
     with pytest.raises(ClientRequestError):
         factory.get_and_test_client()
