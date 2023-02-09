@@ -16,7 +16,7 @@ def project_required(method):
     """Raise error if project is unset when calling method.
 
     Args:
-        method: A SevenBridgesTasks method.
+        method: A SevenBridgesOps method.
 
     Returns:
         A modified method that checks that the project attribute
@@ -34,15 +34,9 @@ def project_required(method):
     return wrapper
 
 
-# TODO: Should I change the class suffix to "Ops" to avoid confusion
-#       with the concept of tasks in SevenBridges?
 @dataclass(kw_only=False, config=ConfigDict(arbitrary_types_allowed=True))
-class SevenBridgesTasks:
-    """Common tasks for SevenBridges platforms.
-
-    Note that SevenBridges uses the term "tasks" to refer to
-    workflow runs. On the other hand, the "tasks" alluded to
-    in this class name refer to operations in general.
+class SevenBridgesOps:
+    """Common operations for SevenBridges platforms.
 
     Attributes:
         client: An authenticated SevenBridges client.
@@ -59,8 +53,8 @@ class SevenBridgesTasks:
         auth_token: str,
         project: Optional[str] = None,
         **client_kwargs: Any,
-    ) -> SevenBridgesTasks:
-        """Construct SevenBridgesTasks from credentials.
+    ) -> SevenBridgesOps:
+        """Construct SevenBridgesOps from credentials.
 
         Args:
             api_endpoint: API base endpoint.
@@ -73,11 +67,11 @@ class SevenBridgesTasks:
                 to the SevenBridges client during its construction.
 
         Returns:
-            An authenticated SevenBridgesTasks instance.
+            An authenticated SevenBridgesOps instance.
         """
         factory = SevenBridgesClientFactory(api_endpoint, auth_token, client_kwargs)
         client = factory.get_client()
-        return SevenBridgesTasks(client, project)
+        return SevenBridgesOps(client, project)
 
     @project_required
     def get_task(self, name: str, app_id: str) -> Optional[str]:

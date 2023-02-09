@@ -32,14 +32,20 @@ from sevenbridges.api import (
 from orca.services.sevenbridges import (
     SevenBridgesClientFactory,
     SevenBridgesHook,
-    SevenBridgesTasks,
+    SevenBridgesOps,
 )
 
 
 @pytest.fixture
 def mock_api(mocker):
     class MockApi(Api):
-        """A mocked version of the SevenBridge API."""
+        """A mocked version of the SevenBridge API.
+
+        This is necessary for getting passed pydantic
+        validation of attribute values, such as the
+        `client` attribute on SevenBridgesTasks, which
+        is supposed to be an instance of Api.
+        """
 
         actions = MagicMock(Actions)
         apps = MagicMock(App)
@@ -82,15 +88,15 @@ def client_args():
 
 
 @pytest.fixture
-def tasks_args(client_args):
-    tasks_args = copy(client_args)
-    tasks_args["project"] = "bgrande/sandbox"
-    yield tasks_args
+def ops_args(client_args):
+    ops_args = copy(client_args)
+    ops_args["project"] = "bgrande/sandbox"
+    yield ops_args
 
 
 @pytest.fixture
-def mock_tasks(tasks_args, mock_api):
-    yield SevenBridgesTasks.from_creds(**tasks_args)
+def mock_ops(ops_args, mock_api):
+    yield SevenBridgesOps.from_creds(**ops_args)
 
 
 # Note that this refers to a SevenBridges task (or workflow run)
@@ -104,11 +110,11 @@ def mock_task(mocker):
 
 
 @pytest.fixture
-def connection_uri(tasks_args):
-    bare_url = tasks_args["api_endpoint"].replace("https://", "")
+def connection_uri(ops_args):
+    bare_url = ops_args["api_endpoint"].replace("https://", "")
     host, schema = bare_url.rstrip("/").rsplit("/", maxsplit=1)
-    token = tasks_args["auth_token"]
-    project = tasks_args["project"]
+    token = ops_args["auth_token"]
+    project = ops_args["project"]
     yield f"sbg://:{token}@{host}/{schema}/?project={project}"
 
 

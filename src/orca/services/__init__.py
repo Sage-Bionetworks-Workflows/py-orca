@@ -11,8 +11,8 @@ client_factory.py:
     methods related to client construction, such as argument "sourcing"
     (e.g., from environment variables) and validation. Eventually, these
     classes might also pull information from a configuration file.
-tasks.py:
-    This submodule defines a tasks class that performs common operations
+ops.py:
+    This submodule defines an ops class that performs common operations
     using a third-party client or the one defined in `client.py`. These
     classes might feature low-level methods depending on the client's
     functionality. That said, their aim is to offer high-level methods
@@ -35,16 +35,16 @@ tasks.py:
     Eventually, these classes might also pull information from a
     configuration file.
 hook.py
-    This submodule defines an Airflow hook that initializes the tasks
-    class from `tasks.py` using the credentials defined by an Airflow
+    This submodule defines an Airflow hook that initializes the ops
+    class from `ops.py` using the credentials defined by an Airflow
     connection. These hook classes are deliberately thin wrappers around
-    the tasks classes. The aim here is to minimize Airflow-specific
+    the ops class. The aim here is to minimize Airflow-specific
     code, which is harder to test. This hook also takes advantage of
     extra field associated with connection objects to configure the
-    underlying client and/or tasks objects. Whether to include a value
+    underlying client and/or ops objects. Whether to include a value
     as the extra connection field probably depends on whether that
     value is useful to change the overall state of the underlying
-    client and/or tasks objects (e.g., `project` for SevenBridgesTasks)
+    client and/or ops objects (e.g., `project` for SevenBridgesOps)
     and whether the value is invariable for a given DAG. Eventually,
     these classes might also pull information from a configuration file.
 """

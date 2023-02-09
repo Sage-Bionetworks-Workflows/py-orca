@@ -4,7 +4,7 @@
 
 ### New Features
 
-- Add basic support for SevenBridges service (_i.e_ client factory, tasks, and hook)
+- Add basic support for SevenBridges service (_i.e_ client factory, ops, and hook)
 
 ### Design Decisions
 
@@ -17,4 +17,4 @@
 - The Airflow hook doesn't include the `get_connection_form_widgets()` and `get_ui_field_behaviour()` static methods.
   - Although they were defined at first, we decided to remove them as we were writing tests because it didn't seem worth maintaining.
   - We plan on storing secrets using AWS SecretsManager, so we don't expect to be using the Connections UI for storing values.
-  - We also want to purposely keep the hooks, which act as wrappers around the client and tasks classes, as thin as possible to facilitate testing.
+  - We also want to purposely keep the hooks, which act as wrappers around the client and ops classes, as thin as possible to facilitate testing.
