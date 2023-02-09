@@ -39,7 +39,13 @@ from orca.services.sevenbridges import (
 @pytest.fixture
 def mock_api(mocker):
     class MockApi(Api):
-        """A mocked version of the SevenBridge API."""
+        """A mocked version of the SevenBridge API.
+
+        This is necessary for getting passed pydantic
+        validation of attribute values, such as the
+        `client` attribute on SevenBridgesTasks, which
+        is supposed to be an instance of Api.
+        """
 
         actions = MagicMock(Actions)
         apps = MagicMock(App)
