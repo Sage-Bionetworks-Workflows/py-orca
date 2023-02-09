@@ -1,41 +1,95 @@
 from copy import copy
+from unittest.mock import MagicMock
 
 import pytest
 from airflow.models.connection import Connection
-from sevenbridges import Task
+from sevenbridges.api import (
+    Actions,
+    Api,
+    App,
+    AsyncJob,
+    Automation,
+    AutomationPackage,
+    AutomationRun,
+    BillingGroup,
+    Dataset,
+    Division,
+    DRSImportBulk,
+    Endpoints,
+    Export,
+    File,
+    Import,
+    Invoice,
+    Marker,
+    Project,
+    RateLimit,
+    Task,
+    Team,
+    User,
+    Volume,
+)
 
 from orca.services.sevenbridges import (
+    SevenBridgesClientFactory,
     SevenBridgesHook,
     SevenBridgesTasks,
-    client_factory,
-    tasks,
 )
 
 
 @pytest.fixture
-def api_mock(mocker):
-    yield mocker.patch.object(client_factory, "Api", autospec=True)
+def mock_api(mocker):
+    class MockApi(Api):
+        """A mocked version of the SevenBridge API."""
+
+        actions = MagicMock(Actions)
+        apps = MagicMock(App)
+        async_jobs = MagicMock(AsyncJob)
+        automations = MagicMock(Automation)
+        automation_runs = MagicMock(AutomationRun)
+        automation_packages = MagicMock(AutomationPackage)
+        billing_groups = MagicMock(BillingGroup)
+        datasets = MagicMock(Dataset)
+        divisions = MagicMock(Division)
+        drs_imports = MagicMock(DRSImportBulk)
+        endpoints = MagicMock(Endpoints)
+        exports = MagicMock(Export)
+        files = MagicMock(File)
+        imports = MagicMock(Import)
+        invoices = MagicMock(Invoice)
+        markers = MagicMock(Marker)
+        projects = MagicMock(Project)
+        rate_limit = MagicMock(RateLimit)
+        tasks = MagicMock(Task)
+        teams = MagicMock(Team)
+        users = MagicMock(User)
+        volumes = MagicMock(Volume)
+
+    yield mocker.patch.object(SevenBridgesClientFactory, "client_cls", MockApi)
 
 
 @pytest.fixture
-def client_creds():
-    client_creds = {
+def mock_api_init(mock_api, mocker):
+    yield mocker.spy(mock_api, "__init__")
+
+
+@pytest.fixture
+def client_args():
+    client_args = {
         "api_endpoint": "https://api.sbgenomics.com/v2",
         "auth_token": "foo",
     }
-    yield client_creds
+    yield client_args
 
 
 @pytest.fixture
-def tasks_args(client_creds):
-    tasks_args = copy(client_creds)
+def tasks_args(client_args):
+    tasks_args = copy(client_args)
     tasks_args["project"] = "bgrande/sandbox"
     yield tasks_args
 
 
 @pytest.fixture
-def mock_tasks(tasks_args, mocker):
-    mocker.patch.object(tasks, "SevenBridgesClientFactory", autospec=True)
+def mock_tasks(tasks_args, mock_api):
     yield SevenBridgesTasks.from_creds(**tasks_args)
 
 

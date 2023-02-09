@@ -6,9 +6,9 @@ from orca.services.sevenbridges import SevenBridgesTasks
 
 @pytest.mark.usefixtures("patch_os_environ")
 class TestWithEmptyEnv:
-    def test_that_constructions_from_creds_works(self, client_creds, api_mock):
-        SevenBridgesTasks.from_creds(**client_creds)
-        api_mock.assert_called_once()
+    def test_that_constructions_from_creds_works(self, client_args, mock_api_init):
+        SevenBridgesTasks.from_creds(**client_args)
+        mock_api_init.assert_called_once()
 
     def test_for_an_error_when_using_a_project_required_method(self, mock_tasks):
         mock_tasks.project = None
