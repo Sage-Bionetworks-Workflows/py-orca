@@ -2,6 +2,6 @@
 
 from orca.services.sevenbridges.client_factory import SevenBridgesClientFactory
 from orca.services.sevenbridges.hook import SevenBridgesHook
-from orca.services.sevenbridges.tasks import SevenBridgesTasks
+from orca.services.sevenbridges.ops import SevenBridgesOps
 
-__all__ = ["SevenBridgesClientFactory", "SevenBridgesTasks", "SevenBridgesHook"]
+__all__ = ["SevenBridgesClientFactory", "SevenBridgesOps", "SevenBridgesHook"]

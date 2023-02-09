@@ -4,11 +4,11 @@ from airflow.hooks.base import BaseHook
 from sevenbridges import Api
 
 from orca.services.sevenbridges.client_factory import SevenBridgesClientFactory
-from orca.services.sevenbridges.tasks import SevenBridgesTasks
+from orca.services.sevenbridges.ops import SevenBridgesOps
 
 
 class SevenBridgesHook(BaseHook):
-    """Wrapper around SevenBridges client and tasks classes.
+    """Wrapper around SevenBridges client and ops classes.
 
     This hook was inspired by the Asana Airflow provider package:
     https://github.com/apache/airflow/blob/main/airflow/providers/asana/hooks/asana.py
@@ -43,6 +43,6 @@ class SevenBridgesHook(BaseHook):
         return factory.get_client()
 
     @cached_property
-    def tasks(self) -> SevenBridgesTasks:
-        """Retrieve authenticated SevenBridgesTasks instance."""
-        return SevenBridgesTasks(self.client, self.project)
+    def ops(self) -> SevenBridgesOps:
+        """Retrieve authenticated SevenBridgesOps instance."""
+        return SevenBridgesOps(self.client, self.project)
