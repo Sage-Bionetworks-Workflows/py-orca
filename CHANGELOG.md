@@ -1,5 +1,11 @@
 # Changelog
 
+## Version 1.0.1
+
+### Fixes
+
+- Fix inconsistency between PyPI package name (py-orca) and Airflow provider package name (orca)
+
 ## Version 1.0.0
 
 ### New Features
