@@ -47,14 +47,13 @@ class SevenBridgesOps:
     project: Optional[str] = None
 
     @classmethod
-    def from_creds(
+    def from_args(
         cls,
         api_endpoint: str,
         auth_token: str,
         project: Optional[str] = None,
-        **client_kwargs: Any,
     ) -> SevenBridgesOps:
-        """Construct SevenBridgesOps from credentials.
+        """Construct SevenBridgesOps from individual arguments.
 
         Args:
             api_endpoint: API base endpoint.
@@ -63,13 +62,11 @@ class SevenBridgesOps:
             project: An owner-prefixed SevenBridges project.
                 For example: <username>/<project-name>.
                 Defaults to None.
-            **client_kwargs: Additional keyword arguments that are passed
-                to the SevenBridges client during its construction.
 
         Returns:
             An authenticated SevenBridgesOps instance.
         """
-        factory = SevenBridgesClientFactory(api_endpoint, auth_token, client_kwargs)
+        factory = SevenBridgesClientFactory(api_endpoint, auth_token)
         client = factory.get_client()
         return SevenBridgesOps(client, project)
 

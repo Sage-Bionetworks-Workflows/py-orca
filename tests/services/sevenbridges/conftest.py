@@ -2,6 +2,7 @@ from copy import copy
 from unittest.mock import MagicMock
 
 import pytest
+from airflow.exceptions import AirflowNotFoundException
 from airflow.models.connection import Connection
 from sevenbridges.api import (
     Actions,
@@ -34,6 +35,7 @@ from orca.services.sevenbridges import (
     SevenBridgesHook,
     SevenBridgesOps,
 )
+from orca.services.sevenbridges.hook import BaseHook
 
 
 @pytest.fixture
@@ -96,7 +98,7 @@ def ops_args(client_args):
 
 @pytest.fixture
 def mock_ops(ops_args, mock_api):
-    yield SevenBridgesOps.from_creds(**ops_args)
+    yield SevenBridgesOps.from_args(**ops_args)
 
 
 # Note that this refers to a SevenBridges task (or workflow run)
@@ -125,9 +127,9 @@ def connection(connection_uri):
 
 @pytest.fixture
 def patch_get_connection(mocker, connection):
-    connection_mock = mocker.patch.object(SevenBridgesHook, "get_connection")
-    connection_mock.return_value = connection
-    yield
+    connection_mock = mocker.patch.object(BaseHook, "get_connection")
+    connection_mock.side_effect = AirflowNotFoundException
+    yield connection_mock
 
 
 @pytest.fixture

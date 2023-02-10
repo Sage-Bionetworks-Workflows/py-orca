@@ -29,3 +29,7 @@ verbose = true
 fail-under = 95
 ignore-module = true
 ignore-nested-functions = true
+
+[tool.vulture]
+paths = ["src/orca/"]
+min_confidence = 80
