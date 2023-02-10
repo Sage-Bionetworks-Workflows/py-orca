@@ -1,10 +1,12 @@
 # Changelog
 
-## Unreleased
+## Version 1.0.0
 
 ### New Features
 
 - Add basic support for SevenBridges service (_i.e_ client factory, ops, and hook)
+- Add the ability to draft, launch, and monitor SevenBridges tasks
+- Register package as an Airflow provider
 
 ### Design Decisions
 
