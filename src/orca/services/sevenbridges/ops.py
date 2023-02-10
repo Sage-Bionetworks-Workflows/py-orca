@@ -129,8 +129,8 @@ class SevenBridgesOps:
 
         # Note that `create()` does not launch by default (run=False)
         task = self.client.tasks.create(name, self.project, app_id, inputs=inputs)
-        task.id = cast(str, task.id)
-        return task.id
+        task_id = cast(str, task.id)
+        return task_id
 
     def launch_task(self, task_id: str) -> str:
         """Launch a draft task (workflow run).
@@ -169,6 +169,6 @@ class SevenBridgesOps:
             The task status and whether it's done.
         """
         task = self.client.tasks.get(task_id)
-        task.status = cast(TaskStatus, task.status)
-        is_done = task.status in TaskStatus.terminal_states
-        return task.status, is_done
+        task_status = cast(TaskStatus, task.status)
+        is_done = task_status in TaskStatus.terminal_states
+        return task_status, is_done
