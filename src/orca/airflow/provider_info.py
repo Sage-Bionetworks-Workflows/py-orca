@@ -1,6 +1,5 @@
 from typing import Any
 
-from orca import __name__ as package_name
 from orca import __version__
 from orca.services.sevenbridges.hook import SevenBridgesHook
 
@@ -31,7 +30,7 @@ def get_provider_info() -> dict[str, Any]:
         https://github.com/apache/airflow/blob/main/airflow/provider_info.schema.json
     """
     return {
-        "package-name": package_name,
+        "package-name": "py-orca",
         "versions": [__version__],
         "name": "ORCA Airflow Provider (Sage Bionetworks)",
         "description": "Package for connecting services and building data pipelines.",
