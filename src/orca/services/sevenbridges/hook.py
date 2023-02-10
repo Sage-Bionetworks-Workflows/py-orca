@@ -1,10 +1,18 @@
-from functools import cached_property
+from __future__ import annotations
 
+from functools import cached_property
+from typing import TYPE_CHECKING
+
+from airflow.exceptions import AirflowNotFoundException
 from airflow.hooks.base import BaseHook
 from sevenbridges import Api
 
+from orca.errors import ClientArgsError
 from orca.services.sevenbridges.client_factory import SevenBridgesClientFactory
 from orca.services.sevenbridges.ops import SevenBridgesOps
+
+if TYPE_CHECKING:
+    from airflow.models.connection import Connection
 
 
 class SevenBridgesHook(BaseHook):
@@ -31,18 +39,45 @@ class SevenBridgesHook(BaseHook):
         extras = self.connection.extra_dejson
         self.project = extras.get("project")
 
-    def get_conn(self) -> Api:
-        """Retrieve authenticated SevenBridges client."""
-        return self.client
+    @classmethod
+    def get_connection(cls, conn_id: str) -> Connection:
+        """
+        Retrieve Airflow connection
+
+        Args:
+            conn_id: Airflow connection ID.
+
+        Returns:
+            An Airflow connection.
+        """
+        try:
+            connection = super().get_connection(conn_id)
+        except AirflowNotFoundException:
+            connection = SevenBridgesClientFactory.connection_from_env()
+        return connection
+
+    def get_conn(self) -> SevenBridgesOps:
+        """Retrieve the authenticated SevenBridgesOps object.
+
+        This object contains an authenticated SevenBridges client.
+
+        Returns:
+            An authenticated SevenBridgesOps instance.
+        """
+        return self.ops
 
     @cached_property
     def client(self) -> Api:
         """Retrieve authenticated SevenBridges client."""
-        client_args = SevenBridgesClientFactory.map_connection(self.connection)
-        factory = SevenBridgesClientFactory(**client_args)
-        return factory.get_client()
+        return self.ops.client
 
     @cached_property
     def ops(self) -> SevenBridgesOps:
-        """Retrieve authenticated SevenBridgesOps instance."""
-        return SevenBridgesOps(self.client, self.project)
+        """An authenticated SevenBridgesOps instance."""
+        kwargs = SevenBridgesClientFactory.parse_connection(self.connection)
+        endpoint = kwargs.pop("api_endpoint")
+        token = kwargs.pop("auth_token")
+        if endpoint is None or token is None:
+            message = f"Unset 'api_endpoint' ({endpoint}) or 'auth_token' ({token})"
+            raise ClientArgsError(message)
+        return SevenBridgesOps.from_args(endpoint, token, **kwargs)

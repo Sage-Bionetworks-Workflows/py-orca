@@ -96,7 +96,7 @@ def ops_args(client_args):
 
 @pytest.fixture
 def mock_ops(ops_args, mock_api):
-    yield SevenBridgesOps.from_creds(**ops_args)
+    yield SevenBridgesOps.from_args(**ops_args)
 
 
 # Note that this refers to a SevenBridges task (or workflow run)

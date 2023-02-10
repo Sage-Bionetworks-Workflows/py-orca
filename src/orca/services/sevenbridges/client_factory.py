@@ -1,14 +1,18 @@
+from __future__ import annotations
+
 import os
 from dataclasses import field
 from functools import cached_property
-from typing import Any, ClassVar, Optional, Type
+from typing import TYPE_CHECKING, Any, ClassVar, Optional, Type
 
-from airflow.models.connection import Connection
 from pydantic.dataclasses import dataclass
 from sevenbridges import Api
 from sevenbridges.http.error_handlers import maintenance_sleeper, rate_limit_sleeper
 
 from orca.errors import ClientArgsError, ClientRequestError
+
+if TYPE_CHECKING:
+    from airflow.models.connection import Connection
 
 
 @dataclass(kw_only=False)
@@ -62,14 +66,14 @@ class SevenBridgesClientFactory:
         self.update_client_kwargs()
 
     @staticmethod
-    def map_connection(connection: Connection) -> dict[str, Any]:
-        """Map Airflow connection fields to client arguments.
+    def parse_connection(connection: Connection) -> dict[str, Optional[str]]:
+        """Map Airflow connection fields to keyword arguments.
 
         Args:
             connection: An Airflow connection object.
 
         Returns:
-            A dictionary of client arguments.
+            Keyword arguments relevant to SevenBridges.
         """
         api_endpoint = None
         if connection.host:
@@ -80,8 +84,33 @@ class SevenBridgesClientFactory:
         kwargs = {
             "api_endpoint": api_endpoint,
             "auth_token": connection.password,
+            "project": connection.extra_dejson.get("project"),
         }
         return kwargs
+
+    @classmethod
+    def connection_from_env(cls) -> Connection:
+        """Generate Airflow connection from environment variable.
+
+        Returns:
+            An Airflow connection
+        """
+        # Following Airflow's lead on this non-standard practice
+        # because this import does introduce a bit of overhead
+        from airflow.models.connection import Connection
+
+        env_connection_uri = os.environ.get(cls.CONNECTION_ENV)
+        return Connection(uri=env_connection_uri)
+
+    @classmethod
+    def kwargs_from_env(cls) -> dict[str, Optional[str]]:
+        """Parse environment variable for keyword arguments.
+
+        Returns:
+            Keyword arguments relevant to SevenBridges.
+        """
+        env_connection = cls.connection_from_env()
+        return cls.parse_connection(env_connection)
 
     def resolve_credentials(self) -> None:
         """Resolve SevenBridges credentials based on priority.
@@ -93,9 +122,7 @@ class SevenBridgesClientFactory:
             return
 
         # Get value from environment, which is confirmed to be available
-        env_connection_uri = os.environ[self.CONNECTION_ENV]
-        env_connection = Connection(uri=env_connection_uri)
-        env_kwargs = self.map_connection(env_connection)
+        env_kwargs = self.kwargs_from_env()
 
         # Resolve single values for each client argument based on priority
         self.api_endpoint = self.api_endpoint or env_kwargs["api_endpoint"]

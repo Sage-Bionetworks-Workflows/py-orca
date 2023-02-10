@@ -62,3 +62,8 @@ repos:
   - id: interrogate
     exclude: ^(docs/conf.py|setup.py|tests)
     args: [--config=pyproject.toml]
+
+- repo: https://github.com/jendrikseipp/vulture
+  rev: 'v2.7'
+  hooks:
+    - id: vulture

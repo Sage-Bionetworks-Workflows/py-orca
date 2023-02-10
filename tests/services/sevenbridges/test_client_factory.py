@@ -37,16 +37,15 @@ class TestWithEmptyEnv:
         assert rate_limit_sleeper in handlers
 
 
-def test_that_a_nonempty_connection_can_be_mapped(connection, client_args):
-    expected = client_args
-    actual = SevenBridgesClientFactory.map_connection(connection)
-    assert actual == expected
+def test_that_a_nonempty_connection_can_be_mapped(connection, ops_args):
+    actual = SevenBridgesClientFactory.parse_connection(connection)
+    assert actual == ops_args
 
 
 def test_that_an_empty_connection_can_be_mapped():
-    expected = {"api_endpoint": None, "auth_token": None}
+    expected = {"api_endpoint": None, "auth_token": None, "project": None}
     connection = Connection(uri="sbg://")
-    result = SevenBridgesClientFactory.map_connection(connection)
+    result = SevenBridgesClientFactory.parse_connection(connection)
     assert result == expected
 
 
