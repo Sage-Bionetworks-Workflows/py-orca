@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from functools import cached_property
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, Type, TypeVar
 
 from pydantic.dataclasses import dataclass
 from typing_extensions import Self
@@ -25,12 +25,12 @@ class BaseClientFactory(ABC, Generic[ClientClass, ServiceConfig]):
 
     @property
     @abstractmethod
-    def config_class(self) -> ServiceConfig:
+    def config_class(self) -> Type[ServiceConfig]:
         """Service configuration class."""
 
     @property
     @abstractmethod
-    def client_class(self) -> ClientClass:
+    def client_class(self) -> Type[ClientClass]:
         """Service client class."""
 
     @abstractmethod

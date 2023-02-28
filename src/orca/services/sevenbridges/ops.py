@@ -54,12 +54,7 @@ class SevenBridgesOps:
         """Construct SevenBridgesOps from individual arguments.
 
         Args:
-            api_endpoint: API base endpoint.
-            auth_token: An authentication token. Available under the
-                Developer menu.
-            project: An owner-prefixed SevenBridges project.
-                For example: <username>/<project-name>.
-                Defaults to None.
+            config: SevenBridges configuration.
 
         Returns:
             An authenticated SevenBridgesOps instance.
