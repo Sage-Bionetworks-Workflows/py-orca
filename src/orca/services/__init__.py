@@ -2,6 +2,12 @@
 
 Each service has its own module with one or more submodules:
 
+config.py:
+    This submodule defines a container class for passing around
+    configuration values used by higher-level components (e.g.,
+    the client and/or the ops classes). This class is also able
+    to retrieve configuration from the environment. Eventually,
+    it might also pull information from a configuration file.
 client.py (optional):
     This submodule defines a client class that interacts with the
     service/API. Services with an existing third-party Python client
@@ -9,8 +15,7 @@ client.py (optional):
 client_factory.py:
     This submodule defines a convenience factory class that features
     methods related to client construction, such as argument "sourcing"
-    (e.g., from environment variables) and validation. Eventually, these
-    classes might also pull information from a configuration file.
+    (e.g., from environment variables) and validation.
 ops.py:
     This submodule defines an ops class that performs common operations
     using a third-party client or the one defined in `client.py`. These
