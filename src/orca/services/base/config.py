@@ -12,8 +12,13 @@ if TYPE_CHECKING:
 
 
 @dataclass(kw_only=False)
-class BaseServiceConfig(ABC):
-    """Simple container class for service-related configuration."""
+class BaseConfig(ABC):
+    """Simple container class for service-related configuration.
+
+    Class Variables:
+        connection_env_var: The name of the environment variable whose
+            value is an Airflow connection URI for this service.
+    """
 
     connection_env_var: ClassVar[str]
 

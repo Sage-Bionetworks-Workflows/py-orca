@@ -20,11 +20,16 @@ class SevenBridgesOps(BaseOps):
 
     Attributes:
         client: An authenticated SevenBridges client.
-        project: A SevenBridges project (prefixed by username).
+        project: A SevenBridges project name (prefixed by username).
+
+    Class Variables:
+        client_factory_class: The class for constructing clients.
     """
 
     client: Api
     project: str
+
+    client_factory_class = SevenBridgesClientFactory
 
     @classmethod
     def from_config(cls, config: SevenBridgesConfig) -> Self:
@@ -36,7 +41,7 @@ class SevenBridgesOps(BaseOps):
         Returns:
             An Ops class instance for this service.
         """
-        factory = SevenBridgesClientFactory.from_config(config)
+        factory = cls.client_factory_class.from_config(config)
         client = factory.get_client()
         if config.project is None:
             message = "The 'project' field must be set in the config ({config})."
