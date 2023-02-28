@@ -2,7 +2,7 @@ import pytest
 from airflow.models.connection import Connection
 from sevenbridges import Api
 
-from orca.errors import ClientArgsError
+from orca.errors import ClientAttrError
 from orca.services.sevenbridges import SevenBridgesHook, SevenBridgesOps
 
 
@@ -24,8 +24,10 @@ class TestWithoutAirflow:
         connection = hook.get_connection("foo")
         assert isinstance(connection, Connection)
 
-    def test_for_error_without_airflow_or_env(self, hook, patch_get_connection, mocker):
+    def test_for_error_without_airflow_or_env(
+        self, hook, patch_get_connection, patch_os_environ, mocker
+    ):
         empty_connection = Connection(uri="sbg://")
         mocker.patch.object(hook, "connection", empty_connection)
-        with pytest.raises(ClientArgsError):
+        with pytest.raises(ClientAttrError):
             hook.ops

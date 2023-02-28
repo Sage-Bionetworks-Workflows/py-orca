@@ -9,8 +9,8 @@ class ClientRequestError(OrcaError):
     """Client request failed."""
 
 
-class ClientArgsError(OrcaError):
-    """Client arguments are missing or invalid."""
+class ClientAttrError(OrcaError):
+    """Client attributes are missing or invalid."""
 
 
 class OptionalAttrRequiredError(OrcaError):

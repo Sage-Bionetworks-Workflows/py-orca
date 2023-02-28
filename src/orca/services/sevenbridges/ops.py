@@ -9,7 +9,10 @@ from sevenbridges import Api
 from sevenbridges.models.enums import TaskStatus
 
 from orca.errors import OptionalAttrRequiredError, UnexpectedMatchError
-from orca.services.sevenbridges.client_factory import SevenBridgesClientFactory
+from orca.services.sevenbridges.client_factory import (
+    SevenBridgesClientFactory,
+    SevenBridgesConfig,
+)
 
 
 def project_required(method):
@@ -47,12 +50,7 @@ class SevenBridgesOps:
     project: Optional[str] = None
 
     @classmethod
-    def from_args(
-        cls,
-        api_endpoint: str,
-        auth_token: str,
-        project: Optional[str] = None,
-    ) -> SevenBridgesOps:
+    def from_config(cls, config: SevenBridgesConfig) -> SevenBridgesOps:
         """Construct SevenBridgesOps from individual arguments.
 
         Args:
@@ -66,9 +64,9 @@ class SevenBridgesOps:
         Returns:
             An authenticated SevenBridgesOps instance.
         """
-        factory = SevenBridgesClientFactory(api_endpoint, auth_token)
+        factory = SevenBridgesClientFactory.from_config(config)
         client = factory.get_client()
-        return SevenBridgesOps(client, project)
+        return SevenBridgesOps(client, config.project)
 
     @project_required
     def get_task(self, name: str, app_id: str) -> Optional[str]:
