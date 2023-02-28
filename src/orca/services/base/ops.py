@@ -5,18 +5,15 @@ from pydantic import ConfigDict
 from pydantic.dataclasses import dataclass
 from typing_extensions import Self
 
-from orca.services.base.client_factory import BaseClientFactory
 from orca.services.base.config import BaseServiceConfig
 
 ClientClass = TypeVar("ClientClass", bound=Any)
-
-ClientFactory = TypeVar("ClientFactory", bound=BaseClientFactory)
 
 ServiceConfig = TypeVar("ServiceConfig", bound=BaseServiceConfig)
 
 
 @dataclass(kw_only=False, config=ConfigDict(arbitrary_types_allowed=True))
-class BaseOps(ABC, Generic[ServiceConfig, ClientFactory, ClientClass]):
+class BaseOps(ABC, Generic[ServiceConfig, ClientClass]):
     """Base collection of operations for a service."""
 
     # Override this type hint in subclasses to enable pydantic validation
