@@ -1,13 +1,22 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, ClassVar, Optional
+from dataclasses import field
+from typing import TYPE_CHECKING, Any, Optional
 
+from pydantic import validator
 from pydantic.dataclasses import dataclass
 
 from orca.services.base import BaseConfig
 
 if TYPE_CHECKING:
     from airflow.models.connection import Connection
+
+
+API_ENDPOINTS = {
+    "https://api.sbgenomics.com/v2",
+    "https://cgc-api.sbgenomics.com/v2",
+    "https://cavatica-api.sbgenomics.com/v2",
+}
 
 
 @dataclass(kw_only=False)
@@ -31,17 +40,19 @@ class SevenBridgesConfig(BaseConfig):
     api_endpoint: Optional[str] = None
     auth_token: Optional[str] = None
     project: Optional[str] = None
+    client_kwargs: dict[str, Any] = field(default_factory=dict)
 
     connection_env_var = "SEVENBRIDGES_CONNECTION_URI"
 
-    valid_api_endpoints: ClassVar[set[str]] = {
-        "https://api.sbgenomics.com/v2",
-        "https://cgc-api.sbgenomics.com/v2",
-        "https://cavatica-api.sbgenomics.com/v2",
-    }
+    @validator("api_endpoint")
+    def validate_api_endpoint(cls, value: str):
+        if value is not None and value not in API_ENDPOINTS:
+            message = f"API endpoint ({value}) is not among {API_ENDPOINTS}."
+            raise ValueError(message)
+        return value
 
     @classmethod
-    def from_connection(cls, connection: Connection) -> SevenBridgesConfig:
+    def parse_connection(cls, connection: Connection) -> dict[str, Any]:
         """Parse Airflow connection as a service configuration.
 
         Args:
@@ -56,9 +67,9 @@ class SevenBridgesConfig(BaseConfig):
             api_endpoint = f"https://{connection.host}/{schema}"
             api_endpoint = api_endpoint.rstrip("/")
 
-        config = cls(
-            api_endpoint=api_endpoint,
-            auth_token=connection.password,
-            project=connection.extra_dejson.get("project"),
-        )
-        return config
+        kwargs = {
+            "api_endpoint": api_endpoint,
+            "auth_token": connection.password,
+            "project": connection.extra_dejson.get("project"),
+        }
+        return kwargs

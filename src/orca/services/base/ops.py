@@ -1,9 +1,8 @@
-from abc import ABC, abstractmethod
+from abc import ABC
+from functools import cached_property
 from typing import Any, ClassVar, Generic, Type, TypeVar
 
-from pydantic import ConfigDict
 from pydantic.dataclasses import dataclass
-from typing_extensions import Self
 
 from orca.services.base.config import BaseConfig
 
@@ -12,7 +11,7 @@ ClientClass = TypeVar("ClientClass", bound=Any)
 ConfigClass = TypeVar("ConfigClass", bound=BaseConfig)
 
 
-@dataclass(kw_only=False, config=ConfigDict(arbitrary_types_allowed=True))
+@dataclass(kw_only=False)
 class BaseOps(ABC, Generic[ConfigClass, ClientClass]):
     """Base collection of operations for a service.
 
@@ -26,18 +25,12 @@ class BaseOps(ABC, Generic[ConfigClass, ClientClass]):
         client_factory_class: The class for constructing clients.
     """
 
-    client: ClientClass
+    config: ConfigClass
 
     client_factory_class: ClassVar[Type]
 
-    @classmethod
-    @abstractmethod
-    def from_config(cls, config: ConfigClass) -> Self:
-        """Construct an Ops instance from the service configuration.
-
-        Args:
-            config: Service configuration.
-
-        Returns:
-            An Ops class instance for this service.
-        """
+    @cached_property
+    def client(self) -> ClientClass:
+        """An authenticated client for this service"""
+        factory = self.client_factory_class(self.config)
+        return factory.get_client(test=True)

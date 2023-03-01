@@ -9,7 +9,7 @@ class ClientRequestError(OrcaError):
     """Client request failed."""
 
 
-class ClientAttrError(OrcaError):
+class ConfigError(OrcaError):
     """Client attributes are missing or invalid."""
 
 

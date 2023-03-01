@@ -41,6 +41,7 @@ class BaseOrcaHook(BaseHook, Generic[OpsClass, ClientClass]):
     hook_name: str
 
     ops_class: ClassVar[Type]
+    config_class: ClassVar[Type]
 
     def __init__(self, conn_id: Optional[str] = None, *args, **kwargs):
         """Construct hook using an Airflow connection.
@@ -67,8 +68,7 @@ class BaseOrcaHook(BaseHook, Generic[OpsClass, ClientClass]):
         try:
             connection = super().get_connection(conn_id)
         except AirflowNotFoundException:
-            config_class = cls.ops_class.client_factory_class.config_class
-            connection = config_class.get_connection_from_env()
+            connection = cls.config_class.get_connection_from_env()
         return connection
 
     def get_conn(self) -> OpsClass:
@@ -89,6 +89,5 @@ class BaseOrcaHook(BaseHook, Generic[OpsClass, ClientClass]):
     @cached_property
     def ops(self) -> OpsClass:
         """An authenticated Ops object."""
-        config_class = self.ops_class.client_factory_class.config_class
-        config = config_class.from_connection(self.connection)
-        return self.ops_class.from_config(config)
+        config = self.config_class.from_connection(self.connection)
+        return self.ops_class(config)
