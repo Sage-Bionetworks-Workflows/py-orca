@@ -1,4 +1,3 @@
-from abc import ABC
 from functools import cached_property
 from typing import Any, ClassVar, Generic, Type, TypeVar
 
@@ -12,14 +11,18 @@ ConfigClass = TypeVar("ConfigClass", bound=BaseConfig)
 
 
 @dataclass(kw_only=False)
-class BaseOps(ABC, Generic[ConfigClass, ClientClass]):
+class BaseOps(Generic[ConfigClass, ClientClass]):
     """Base collection of operations for a service.
 
-    N.B. Make sure to override the type hint for the ``client`` class
-    variable in subclasses to enable pydantic validation.
+    Usage Instructions:
+        1) Create a class that subclasses this base class.
+        2) Decorate this class with ``@dataclass`` as this one does.
+        3) Provide values to all class variables (defined below).
+        4) Provide implementations for all abstract methods.
+        5) Update the type hints for attributes and class variables.
 
     Attributes:
-        client: An authenticated client object for this service.
+        config: A configuration object for this service.
 
     Class Variables:
         client_factory_class: The class for constructing clients.

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from functools import cached_property
-from typing import Any, Generic, TypeVar
+from typing import Any, ClassVar, Generic, Type, TypeVar
 
 from pydantic.dataclasses import dataclass
 
@@ -18,15 +18,23 @@ ConfigClass = TypeVar("ConfigClass", bound=BaseConfig)
 class BaseClientFactory(ABC, Generic[ClientClass, ConfigClass]):
     """Base factory for constructing clients.
 
+    Usage Instructions:
+        1) Create a class that subclasses this base class.
+        2) Decorate this class with ``@dataclass`` as this one does.
+        3) Provide values to all class variables (defined below).
+        4) Provide implementations for all abstract methods.
+        5) Update the type hints for attributes and class variables.
+
     Attributes:
-        config: Configuration relevant to this service.
+        config: Configuration object for this service.
 
     Class Variables:
-        connection_env_var: The name of the environment variable whose
-            value is an Airflow connection URI for this service.
+        client_class: The client class for this service.
     """
 
     config: ConfigClass
+
+    client_class: ClassVar[Type]
 
     @abstractmethod
     def create_client(self) -> ClientClass:
@@ -54,7 +62,7 @@ class BaseClientFactory(ABC, Generic[ClientClass, ConfigClass]):
         is made but indicates a problem.
 
         Args:
-            An authenticated instance of the client for this service.
+            client: An authenticated client for this service.
         """
 
     @classmethod
@@ -62,7 +70,7 @@ class BaseClientFactory(ABC, Generic[ClientClass, ConfigClass]):
         """Test the client with an authenticated request.
 
         Args:
-            An authenticated instance of the client for this service.
+            client: An authenticated client for this service.
 
         Raises:
             ClientRequestError: If an error occured while making a request.
@@ -74,7 +82,7 @@ class BaseClientFactory(ABC, Generic[ClientClass, ConfigClass]):
             raise ClientRequestError(message) from error
 
     @cached_property
-    def _client(self) -> ClientClass:
+    def client(self) -> ClientClass:
         """An authenticated client."""
         return self.create_client()
 
@@ -87,7 +95,7 @@ class BaseClientFactory(ABC, Generic[ClientClass, ConfigClass]):
         Returns:
             An authenticated client.
         """
-        client = self._client
+        client = self.client
         if test:
             self.test_client(client)
         return client
