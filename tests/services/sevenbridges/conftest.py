@@ -30,8 +30,11 @@ from sevenbridges.api import (
 )
 
 from orca.services.base.hook import BaseHook
-from orca.services.sevenbridges import SevenBridgesHook, SevenBridgesOps
-from orca.services.sevenbridges.client_factory import SevenBridgesConfig
+from orca.services.sevenbridges import (
+    SevenBridgesConfig,
+    SevenBridgesHook,
+    SevenBridgesOps,
+)
 
 
 @pytest.fixture
