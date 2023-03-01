@@ -21,7 +21,7 @@ class BaseConfig(ABC):
         2) Decorate this class with ``@dataclass`` as this one does.
         3) Provide values to all class variables (defined below).
         4) Provide implementations for all abstract methods.
-        5) Verify that any assumptions defined below are met.
+        5) Verify that the assumptions defined below are met.
         6) (Optional) Implement custom Pydantic validators
 
     Assumptions:
@@ -83,7 +83,7 @@ class BaseConfig(ABC):
         """Fill in missing attributes with another configuration.
 
         Args:
-            other: Another configuration object.
+            kwargs: Keyword arguments for this configuration.
         """
         for field in fields(self):
             name = field.name

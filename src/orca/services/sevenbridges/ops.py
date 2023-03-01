@@ -17,8 +17,7 @@ class SevenBridgesOps(BaseOps):
     """Common operations for SevenBridges platforms.
 
     Attributes:
-        config: A SevenBridges configuration object, which contains
-            values relevant to client creation.
+        config: A configuration object for this service.
 
     Class Variables:
         client_factory_class: The class for constructing clients.

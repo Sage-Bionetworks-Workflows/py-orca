@@ -24,8 +24,10 @@ class SevenBridgesClientFactory(BaseClientFactory):
             API is in maintenance mode.
 
     Attributes:
-        config: A SevenBridges configuration object, which contains
-            values relevant to client creation.
+        config: Configuration object for this service.
+
+    Class Variables:
+        client_class: The client class for this service.
     """
 
     config: SevenBridgesConfig
@@ -71,6 +73,6 @@ class SevenBridgesClientFactory(BaseClientFactory):
         is made but indicates a problem.
 
         Args:
-            An authenticated instance of the client for this service.
+            client: An authenticated client for this service.
         """
         client.users.me()

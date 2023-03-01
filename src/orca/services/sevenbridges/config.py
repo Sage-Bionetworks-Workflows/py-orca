@@ -30,11 +30,12 @@ class SevenBridgesConfig(BaseConfig):
         auth_token: An authentication token for the platform specified
             by the ``api_endpoints`` value.
         project: A SevenBridges project name (prefixed by username).
+        client_kwargs: Keyword arguments for the SevenBridges Api class
+            in the form of a dictionary.
 
     Class Variables:
         connection_env_var: The name of the environment variable whose
             value is an Airflow connection URI for this service.
-        api_endpoints: The set of currently supported API endpoints.
     """
 
     api_endpoint: Optional[str] = None
@@ -46,6 +47,17 @@ class SevenBridgesConfig(BaseConfig):
 
     @validator("api_endpoint")
     def validate_api_endpoint(cls, value: str):
+        """Validate the value of `api_endpoint`.
+
+        Args:
+            value: The SevenBridges API endpoint.
+
+        Raises:
+            ValueError: If the value isn't among the valid options.
+
+        Returns:
+            The input value, unchanged.
+        """
         if value is not None and value not in API_ENDPOINTS:
             message = f"API endpoint ({value}) is not among {API_ENDPOINTS}."
             raise ValueError(message)
@@ -53,13 +65,13 @@ class SevenBridgesConfig(BaseConfig):
 
     @classmethod
     def parse_connection(cls, connection: Connection) -> dict[str, Any]:
-        """Parse Airflow connection as a service configuration.
+        """Parse Airflow connection as arguments for this configuration.
 
         Args:
             connection: An Airflow connection object.
 
         Returns:
-            Configuration relevant to this service.
+            Keyword arguments for this configuration.
         """
         api_endpoint = None
         if connection.host:
