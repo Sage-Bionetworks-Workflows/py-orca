@@ -1,4 +1,5 @@
 from orca.services.base.hook import BaseOrcaHook
+from orca.services.sevenbridges.config import SevenBridgesConfig
 from orca.services.sevenbridges.ops import SevenBridgesOps
 
 
@@ -21,3 +22,4 @@ class SevenBridgesHook(BaseOrcaHook):
     hook_name = "SevenBridges"
 
     ops_class = SevenBridgesOps
+    config_class = SevenBridgesConfig

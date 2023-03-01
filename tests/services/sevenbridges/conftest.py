@@ -1,4 +1,3 @@
-from copy import copy
 from unittest.mock import MagicMock
 
 import pytest
@@ -31,11 +30,7 @@ from sevenbridges.api import (
 )
 
 from orca.services.base.hook import BaseHook
-from orca.services.sevenbridges import (
-    SevenBridgesClientFactory,
-    SevenBridgesHook,
-    SevenBridgesOps,
-)
+from orca.services.sevenbridges import SevenBridgesHook, SevenBridgesOps
 from orca.services.sevenbridges.client_factory import SevenBridgesConfig
 
 
@@ -73,7 +68,7 @@ def mock_api(mocker):
         users = MagicMock(User)
         volumes = MagicMock(Volume)
 
-    yield mocker.patch.object(SevenBridgesClientFactory, "client_class", MockApi)
+    yield mocker.patch("orca.services.sevenbridges.client_factory.Api", MockApi)
 
 
 @pytest.fixture
@@ -82,30 +77,18 @@ def mock_api_init(mock_api, mocker):
 
 
 @pytest.fixture
-def client_args():
-    client_args = {
-        "api_endpoint": "https://api.sbgenomics.com/v2",
-        "auth_token": "foo",
-    }
-    yield client_args
-
-
-@pytest.fixture
-def ops_args(client_args):
-    ops_args = copy(client_args)
-    ops_args["project"] = "bgrande/sandbox"
-    yield ops_args
-
-
-@pytest.fixture
-def ops_config(ops_args):
-    config = SevenBridgesConfig(**ops_args)
+def config():
+    config = SevenBridgesConfig(
+        api_endpoint="https://api.sbgenomics.com/v2",
+        auth_token="foo",
+        project="bgrande/sandbox",
+    )
     yield config
 
 
 @pytest.fixture
-def mock_ops(ops_config, mock_api):
-    yield SevenBridgesOps.from_config(ops_config)
+def mock_ops(config, mock_api):
+    yield SevenBridgesOps(config)
 
 
 # Note that this refers to a SevenBridges task (or workflow run)
@@ -119,11 +102,11 @@ def mock_task(mocker):
 
 
 @pytest.fixture
-def connection_uri(ops_args):
-    bare_url = ops_args["api_endpoint"].replace("https://", "")
+def connection_uri(config):
+    bare_url = config.api_endpoint.replace("https://", "")
     host, schema = bare_url.rstrip("/").rsplit("/", maxsplit=1)
-    token = ops_args["auth_token"]
-    project = ops_args["project"]
+    token = config.auth_token
+    project = config.project
     yield f"sbg://:{token}@{host}/{schema}/?project={project}"
 
 
