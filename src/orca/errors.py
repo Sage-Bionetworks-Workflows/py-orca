@@ -9,12 +9,8 @@ class ClientRequestError(OrcaError):
     """Client request failed."""
 
 
-class ConfigError(OrcaError):
-    """Client attributes are missing or invalid."""
-
-
-class OptionalAttrRequiredError(OrcaError):
-    """Optional attribute is required in this context."""
+class ConfigError(OrcaError, AttributeError):
+    """Missing or invalid configuration attribute(s)."""
 
 
 class UnexpectedMatchError(OrcaError):
