@@ -7,8 +7,7 @@ from airflow.exceptions import AirflowNotFoundException
 from airflow.hooks.base import BaseHook
 from sevenbridges import Api
 
-from orca.errors import ClientArgsError
-from orca.services.sevenbridges.client_factory import SevenBridgesClientFactory
+from orca.services.sevenbridges.config import SevenBridgesConfig
 from orca.services.sevenbridges.ops import SevenBridgesOps
 
 if TYPE_CHECKING:
@@ -53,7 +52,7 @@ class SevenBridgesHook(BaseHook):
         try:
             connection = super().get_connection(conn_id)
         except AirflowNotFoundException:
-            connection = SevenBridgesClientFactory.connection_from_env()
+            connection = SevenBridgesConfig.get_connection_from_env()
         return connection
 
     def get_conn(self) -> SevenBridgesOps:
@@ -74,10 +73,5 @@ class SevenBridgesHook(BaseHook):
     @cached_property
     def ops(self) -> SevenBridgesOps:
         """An authenticated SevenBridgesOps instance."""
-        kwargs = SevenBridgesClientFactory.parse_connection(self.connection)
-        endpoint = kwargs.pop("api_endpoint")
-        token = kwargs.pop("auth_token")
-        if endpoint is None or token is None:
-            message = f"Unset 'api_endpoint' ({endpoint}) or 'auth_token' ({token})"
-            raise ClientArgsError(message)
-        return SevenBridgesOps.from_args(endpoint, token, **kwargs)
+        config = SevenBridgesConfig.from_connection(self.connection)
+        return SevenBridgesOps.from_config(config)

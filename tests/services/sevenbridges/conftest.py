@@ -35,6 +35,7 @@ from orca.services.sevenbridges import (
     SevenBridgesHook,
     SevenBridgesOps,
 )
+from orca.services.sevenbridges.client_factory import SevenBridgesConfig
 from orca.services.sevenbridges.hook import BaseHook
 
 
@@ -72,7 +73,7 @@ def mock_api(mocker):
         users = MagicMock(User)
         volumes = MagicMock(Volume)
 
-    yield mocker.patch.object(SevenBridgesClientFactory, "client_cls", MockApi)
+    yield mocker.patch.object(SevenBridgesClientFactory, "client_class", MockApi)
 
 
 @pytest.fixture
@@ -97,8 +98,14 @@ def ops_args(client_args):
 
 
 @pytest.fixture
-def mock_ops(ops_args, mock_api):
-    yield SevenBridgesOps.from_args(**ops_args)
+def ops_config(ops_args):
+    config = SevenBridgesConfig(**ops_args)
+    yield config
+
+
+@pytest.fixture
+def mock_ops(ops_config, mock_api):
+    yield SevenBridgesOps.from_config(ops_config)
 
 
 # Note that this refers to a SevenBridges task (or workflow run)
