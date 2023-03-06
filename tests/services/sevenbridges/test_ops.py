@@ -1,6 +1,6 @@
 import pytest
 
-from orca.errors import OptionalAttrRequiredError, UnexpectedMatchError
+from orca.errors import UnexpectedMatchError
 from orca.services.sevenbridges import SevenBridgesOps
 
 
@@ -10,10 +10,12 @@ class TestWithEmptyEnv:
         SevenBridgesOps.from_config(ops_config)
         mock_api_init.assert_called_once()
 
-    def test_for_an_error_when_using_a_project_required_method(self, mock_ops):
-        mock_ops.project = None
-        with pytest.raises(OptionalAttrRequiredError):
-            mock_ops.draft_task("foo", "bar", {})
+    def test_for_error_when_constructing_from_config_without_project(
+        self, ops_config, mock_api_init
+    ):
+        ops_config.project = None
+        with pytest.raises(ValueError):
+            SevenBridgesOps.from_config(ops_config)
 
     def test_that_the_client_is_used_to_get_a_task(self, mock_task, mock_ops):
         mock_ops.client.tasks.query.return_value = [mock_task]

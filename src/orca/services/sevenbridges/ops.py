@@ -1,44 +1,21 @@
 from __future__ import annotations
 
-from functools import wraps
 from typing import Any, Optional, cast
 
 from pydantic import ConfigDict
 from pydantic.dataclasses import dataclass
 from sevenbridges import Api
 from sevenbridges.models.enums import TaskStatus
+from typing_extensions import Self
 
-from orca.errors import OptionalAttrRequiredError, UnexpectedMatchError
-from orca.services.sevenbridges.client_factory import (
-    SevenBridgesClientFactory,
-    SevenBridgesConfig,
-)
-
-
-def project_required(method):
-    """Raise error if project is unset when calling method.
-
-    Args:
-        method: A SevenBridgesOps method.
-
-    Returns:
-        A modified method that checks that the project attribute
-        is set before running the method.
-    """
-
-    @wraps(method)
-    def wrapper(self, *args, **kwargs):
-        if self.project is None:
-            name = method.__name__
-            message = f"`project` attribute must be set before calling `{name}()`."
-            raise OptionalAttrRequiredError(message)
-        return method(self, *args, **kwargs)
-
-    return wrapper
+from orca.errors import UnexpectedMatchError
+from orca.services.base.ops import BaseOps
+from orca.services.sevenbridges.client_factory import SevenBridgesClientFactory
+from orca.services.sevenbridges.config import SevenBridgesConfig
 
 
 @dataclass(kw_only=False, config=ConfigDict(arbitrary_types_allowed=True))
-class SevenBridgesOps:
+class SevenBridgesOps(BaseOps):
     """Common operations for SevenBridges platforms.
 
     Attributes:
@@ -47,23 +24,25 @@ class SevenBridgesOps:
     """
 
     client: Api
-    project: Optional[str] = None
+    project: str
 
     @classmethod
-    def from_config(cls, config: SevenBridgesConfig) -> SevenBridgesOps:
-        """Construct SevenBridgesOps from individual arguments.
+    def from_config(cls, config: SevenBridgesConfig) -> Self:
+        """Construct an Ops instance from the service configuration.
 
         Args:
             config: SevenBridges configuration.
 
         Returns:
-            An authenticated SevenBridgesOps instance.
+            An Ops class instance for this service.
         """
         factory = SevenBridgesClientFactory.from_config(config)
         client = factory.get_client()
-        return SevenBridgesOps(client, config.project)
+        if config.project is None:
+            message = "The 'project' field must be set in the config ({config})."
+            raise ValueError(message)
+        return cls(client, config.project)
 
-    @project_required
     def get_task(self, name: str, app_id: str) -> Optional[str]:
         """Retrieve a task ID based on some filters.
 
@@ -98,7 +77,6 @@ class SevenBridgesOps:
 
         return task.id
 
-    @project_required
     def draft_task(self, name: str, app_id: str, inputs: dict[str, Any]) -> str:
         """Draft a task (workflow run) if need be.
 
