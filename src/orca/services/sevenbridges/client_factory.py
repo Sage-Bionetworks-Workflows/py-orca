@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 from dataclasses import field
-from typing import TYPE_CHECKING, Any, Optional, Type
+from typing import TYPE_CHECKING, Any, Optional
 
 from pydantic.dataclasses import dataclass
 from sevenbridges import Api
@@ -11,12 +11,6 @@ from sevenbridges.http.error_handlers import maintenance_sleeper, rate_limit_sle
 from orca.errors import ClientAttrError, ClientRequestError
 from orca.services.base import BaseClientFactory
 from orca.services.sevenbridges.config import SevenBridgesConfig
-
-API_ENDPOINTS = {
-    "https://api.sbgenomics.com/v2",
-    "https://cgc-api.sbgenomics.com/v2",
-    "https://cavatica-api.sbgenomics.com/v2",
-}
 
 
 @dataclass(kw_only=False)
@@ -41,9 +35,11 @@ class SevenBridgesClientFactory(BaseClientFactory):
             API is in maintenance mode.
 
     Attributes:
-        api_endpoint: API base endpoint.
-        auth_token: Authentication auth_token.
-            Available under the Developer menu.
+        api_endpoint: API endpoint for a SevenBridges platform.
+            Valid values are provided by the ``valid_api_endpoints``
+            class variable.
+        auth_token: An authentication token for the platform specified
+            by the ``api_endpoints`` value.
         client_kwargs: Additional keyword arguments that are passed to
             the SevenBridges client during its construction.
     """
@@ -52,15 +48,8 @@ class SevenBridgesClientFactory(BaseClientFactory):
     auth_token: Optional[str] = None
     client_kwargs: dict[str, Any] = field(default_factory=dict)
 
-    @property
-    def config_class(self) -> Type[SevenBridgesConfig]:
-        """Service configuration class."""
-        return SevenBridgesConfig
-
-    @property
-    def client_class(self) -> Type[Api]:
-        """Service client class."""
-        return Api
+    config_class = SevenBridgesConfig
+    client_class = Api
 
     def update_with_config(self, config: SevenBridgesConfig):
         """Update instance attributes based on client configuration.
@@ -92,8 +81,9 @@ class SevenBridgesClientFactory(BaseClientFactory):
             )
             raise ClientAttrError(common_message + addendum)
 
-        if self.api_endpoint not in API_ENDPOINTS:
-            addendum = f"API ({self.api_endpoint}) is not among {API_ENDPOINTS}."
+        valid_api_endpoints = self.config_class.valid_api_endpoints
+        if self.api_endpoint not in valid_api_endpoints:
+            addendum = f"API ({self.api_endpoint}) is not among {valid_api_endpoints}."
             raise ClientAttrError(common_message + addendum)
 
     def prepare_client_kwargs(self) -> dict[str, Any]:

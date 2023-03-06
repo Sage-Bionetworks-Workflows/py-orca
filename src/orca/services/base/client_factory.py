@@ -2,39 +2,37 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from functools import cached_property
-from typing import Any, Generic, Type, TypeVar
+from typing import Any, ClassVar, Generic, Type, TypeVar
 
 from pydantic.dataclasses import dataclass
 from typing_extensions import Self
 
-from orca.services.base.config import BaseServiceConfig
+from orca.services.base.config import BaseConfig
 
 ClientClass = TypeVar("ClientClass", bound=Any)
 
-ServiceConfig = TypeVar("ServiceConfig", bound=BaseServiceConfig)
+ConfigClass = TypeVar("ConfigClass", bound=BaseConfig)
 
 
 @dataclass(kw_only=False)
-class BaseClientFactory(ABC, Generic[ClientClass, ServiceConfig]):
-    """Base factory for constructing clients."""
+class BaseClientFactory(ABC, Generic[ClientClass, ConfigClass]):
+    """Base factory for constructing clients.
+
+    Class Variables:
+        connection_env_var: The name of the environment variable whose
+            value is an Airflow connection URI for this service.
+    """
+
+    config_class: ClassVar[Type]
+    client_class: ClassVar[Type]
 
     # Using `__post_init_post_parse__()` to perform steps after validation
     def __post_init_post_parse__(self) -> None:
         """Resolve any attributes using the available methods."""
         self.resolve()
 
-    @property
     @abstractmethod
-    def config_class(self) -> Type[ServiceConfig]:
-        """Service configuration class."""
-
-    @property
-    @abstractmethod
-    def client_class(self) -> Type[ClientClass]:
-        """Service client class."""
-
-    @abstractmethod
-    def update_with_config(self, config: ServiceConfig):
+    def update_with_config(self, config: ConfigClass):
         """Update instance attributes based on client configuration.
 
         Args:
@@ -67,7 +65,7 @@ class BaseClientFactory(ABC, Generic[ClientClass, ServiceConfig]):
         """
 
     @classmethod
-    def from_config(cls, config: ServiceConfig) -> Self:
+    def from_config(cls, config: ConfigClass) -> Self:
         """Construct client factory from configuration.
 
         Args:
