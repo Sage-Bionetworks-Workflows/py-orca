@@ -2,6 +2,7 @@ from typing import Any
 
 import requests
 from pydantic.dataclasses import dataclass
+from requests.exceptions import HTTPError
 
 
 @dataclass(kw_only=False)
@@ -27,6 +28,11 @@ class NextflowTowerClient:
             key1: Top-level key.
             key2: Nested key.
             default: Default value.
+
+        Raises:
+            ValueError: If 'params' isn't a dictionary.
+            ValueError: If the existing value under the provided keys
+                does not match the type of the default value.
         """
         kwargs.setdefault(key1, dict())
         if not isinstance(kwargs[key1], dict):
@@ -49,6 +55,9 @@ class NextflowTowerClient:
             **kwargs: Additional named arguments passed through to
                 requests.request().
 
+        Raises:
+            ValueError: If the provided method isn't valid.
+
         Returns:
             The raw Response object to allow for special handling
         """
@@ -65,7 +74,7 @@ class NextflowTowerClient:
         return requests.request(method, url, **kwargs)
 
     def request_json(self, method: str, path: str, **kwargs) -> dict[str, Any]:
-        """Make an authenticated HTTP request and parse the JSON response.
+        """Make an auth'ed HTTP request and parse the JSON response.
 
         See ``TowerClient.request`` for argument definitions.
 
@@ -85,8 +94,8 @@ class NextflowTowerClient:
         See ``TowerClient.request`` for argument definitions.
 
         Raises:
-            ValueError: If the 'params' keyword argument
-                isn't a dictionary
+            HTTPError: If the response doesn't match the expectation
+                for a paged endpoint.
 
         Returns:
             The cumulative list of items from all pages.
@@ -104,18 +113,28 @@ class NextflowTowerClient:
 
             if "totalSize" not in json:
                 message = f"'totalSize' not in response JSON ({json}) as expected."
-                raise requests.exceptions.HTTPError(message)
+                raise HTTPError(message)
             total_size = json.pop("totalSize")
 
             if len(json) != 1:
                 message = f"Expected one other key aside from 'totalSize' ({json})."
-                raise requests.exceptions.HTTPError(message)
+                raise HTTPError(message)
             _, items = json.popitem()
 
             num_items += len(items)
             all_items.extend(items)
 
         return all_items
+
+    def get(self, path: str, **kwargs) -> dict[str, Any]:
+        """Send an auth'ed GET request and parse the JSON response.
+
+        See ``TowerClient.request`` for argument definitions.
+
+        Returns:
+            A dictionary from deserializing the JSON response.
+        """
+        return self.request_json("GET", path, **kwargs)
 
     # TODO: Consider creating a `client` submodule folder to organize methods
     def get_user_info(self) -> dict[str, Any]:
@@ -125,4 +144,4 @@ class NextflowTowerClient:
             Current user
         """
         path = "/user-info"
-        return self.request_json("get", path)
+        return self.get(path)
