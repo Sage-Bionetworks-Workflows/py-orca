@@ -1,21 +1,21 @@
 import pytest
 
-from orca.errors import UnexpectedMatchError
+from orca.errors import ConfigError, UnexpectedMatchError
 from orca.services.sevenbridges import SevenBridgesOps
 
 
 @pytest.mark.usefixtures("patch_os_environ")
 class TestWithEmptyEnv:
-    def test_that_constructions_from_creds_works(self, ops_config, mock_api_init):
-        SevenBridgesOps.from_config(ops_config)
+    def test_that_constructions_from_creds_works(self, config, mock_api_init):
+        SevenBridgesOps(config).client
         mock_api_init.assert_called_once()
 
     def test_for_error_when_constructing_from_config_without_project(
-        self, ops_config, mock_api_init
+        self, config, mock_api_init
     ):
-        ops_config.project = None
-        with pytest.raises(ValueError):
-            SevenBridgesOps.from_config(ops_config)
+        config.project = None
+        with pytest.raises(ConfigError):
+            SevenBridgesOps(config).project
 
     def test_that_the_client_is_used_to_get_a_task(self, mock_task, mock_ops):
         mock_ops.client.tasks.query.return_value = [mock_task]

@@ -1,52 +1,39 @@
 from __future__ import annotations
 
+from functools import cached_property
 from typing import Any, Optional, cast
 
-from pydantic import ConfigDict
 from pydantic.dataclasses import dataclass
-from sevenbridges import Api
 from sevenbridges.models.enums import TaskStatus
-from typing_extensions import Self
 
-from orca.errors import UnexpectedMatchError
+from orca.errors import ConfigError, UnexpectedMatchError
 from orca.services.base.ops import BaseOps
 from orca.services.sevenbridges.client_factory import SevenBridgesClientFactory
 from orca.services.sevenbridges.config import SevenBridgesConfig
 
 
-@dataclass(kw_only=False, config=ConfigDict(arbitrary_types_allowed=True))
+@dataclass(kw_only=False)
 class SevenBridgesOps(BaseOps):
     """Common operations for SevenBridges platforms.
 
     Attributes:
-        client: An authenticated SevenBridges client.
-        project: A SevenBridges project name (prefixed by username).
+        config: A configuration object for this service.
 
     Class Variables:
         client_factory_class: The class for constructing clients.
     """
 
-    client: Api
-    project: str
+    config: SevenBridgesConfig
 
     client_factory_class = SevenBridgesClientFactory
 
-    @classmethod
-    def from_config(cls, config: SevenBridgesConfig) -> Self:
-        """Construct an Ops instance from the service configuration.
-
-        Args:
-            config: SevenBridges configuration.
-
-        Returns:
-            An Ops class instance for this service.
-        """
-        factory = cls.client_factory_class.from_config(config)
-        client = factory.get_client()
-        if config.project is None:
-            message = "The 'project' field must be set in the config ({config})."
-            raise ValueError(message)
-        return cls(client, config.project)
+    @cached_property
+    def project(self) -> str:
+        """The currently active SevenBridges project."""
+        if self.config.project is None:
+            message = f"Config ({self.config}) does not specify a project."
+            raise ConfigError(message)
+        return self.config.project
 
     def get_task(self, name: str, app_id: str) -> Optional[str]:
         """Retrieve a task ID based on some filters.

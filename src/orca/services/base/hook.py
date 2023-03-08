@@ -25,22 +25,26 @@ class BaseOrcaHook(BaseHook, Generic[OpsClass, ClientClass]):
     This hook was inspired by the Asana Airflow provider package:
     https://github.com/apache/airflow/blob/main/airflow/providers/asana/hooks/asana.py
 
-    Attributes:
+    Usage Instructions:
+        1) Create a class that subclasses this base class.
+        2) Provide values to all class variables (defined below).
+
+    Class Variables:
         conn_name_attr: Inherited Airflow attribute (e.g., "sbg_conn_id").
         default_conn_name: Inherited Airflow attribute (e.g., "sbg_default").
         conn_type: Inherited Airflow attribute (e.g., "sbg").
         hook_name: Inherited Airflow attribute (e.g., "SevenBridges").
-
-    Class Variables:
         ops_class: The Ops class for this service.
+        config_class: The configuration class for this service.
     """
 
-    conn_name_attr: str
-    default_conn_name: str
-    conn_type: str
-    hook_name: str
+    conn_name_attr: ClassVar[str]
+    default_conn_name: ClassVar[str]
+    conn_type: ClassVar[str]
+    hook_name: ClassVar[str]
 
     ops_class: ClassVar[Type]
+    config_class: ClassVar[Type]
 
     def __init__(self, conn_id: Optional[str] = None, *args, **kwargs):
         """Construct hook using an Airflow connection.
@@ -67,8 +71,7 @@ class BaseOrcaHook(BaseHook, Generic[OpsClass, ClientClass]):
         try:
             connection = super().get_connection(conn_id)
         except AirflowNotFoundException:
-            config_class = cls.ops_class.client_factory_class.config_class
-            connection = config_class.get_connection_from_env()
+            connection = cls.config_class.get_connection_from_env()
         return connection
 
     def get_conn(self) -> OpsClass:
@@ -89,6 +92,5 @@ class BaseOrcaHook(BaseHook, Generic[OpsClass, ClientClass]):
     @cached_property
     def ops(self) -> OpsClass:
         """An authenticated Ops object."""
-        config_class = self.ops_class.client_factory_class.config_class
-        config = config_class.from_connection(self.connection)
-        return self.ops_class.from_config(config)
+        config = self.config_class.from_connection(self.connection)
+        return self.ops_class(config)
