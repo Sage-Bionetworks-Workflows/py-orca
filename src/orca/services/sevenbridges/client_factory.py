@@ -73,6 +73,6 @@ class SevenBridgesClientFactory(BaseClientFactory):
         is made but indicates a problem.
 
         Args:
-            client: An authenticated client for this service.
+            client: An authenticated client object.
         """
         client.users.me()

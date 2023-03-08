@@ -62,7 +62,7 @@ class BaseClientFactory(ABC, Generic[ClientClass, ConfigClass]):
         is made but indicates a problem.
 
         Args:
-            client: An authenticated client for this service.
+            client: An authenticated client object.
         """
 
     @classmethod
@@ -70,7 +70,7 @@ class BaseClientFactory(ABC, Generic[ClientClass, ConfigClass]):
         """Test the client with an authenticated request.
 
         Args:
-            client: An authenticated client for this service.
+            client: An authenticated client object.
 
         Raises:
             ClientRequestError: If an error occured while making a request.
