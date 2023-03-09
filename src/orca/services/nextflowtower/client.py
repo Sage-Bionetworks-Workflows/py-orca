@@ -5,6 +5,7 @@ from pydantic.dataclasses import dataclass
 from requests.exceptions import HTTPError
 
 
+# TODO: Consider creating a `client` submodule folder to organize methods
 @dataclass(kw_only=False)
 class NextflowTowerClient:
     """Simple Python client for making requests to Nextflow Tower.
@@ -136,12 +137,54 @@ class NextflowTowerClient:
         """
         return self.request_json("GET", path, **kwargs)
 
-    # TODO: Consider creating a `client` submodule folder to organize methods
     def get_user_info(self) -> dict[str, Any]:
         """Describe current user.
 
+        Raises:
+            HTTPError: If the response lacks the expected keys.
+
         Returns:
-            Current user
+            Current user.
         """
         path = "/user-info"
-        return self.get(path)
+        key = "user"
+        response = self.get(path)
+        if key not in response:
+            message = f"Expecting '{key}' key in response ({response})."
+            raise HTTPError(message)
+        return response[key]
+
+    def get_user_workspaces_and_orgs(self, user_id: int) -> list[dict[str, Any]]:
+        """List the workspaces and organizations of a given user.
+
+        Raises:
+            HTTPError: If the response lacks the expected keys.
+
+        Returns:
+            Workspaces and organizations.
+        """
+        path = f"/user/{user_id}/workspaces"
+        key = "orgsAndWorkspaces"
+        response = self.get(path)
+        if key not in response:
+            message = f"Expecting '{key}' key in response ({response})."
+            raise HTTPError(message)
+        return response[key]
+
+    # TODO: Should this higher-level method exist here or in Ops?
+    def list_user_workspaces(self) -> list[dict[str, Any]]:
+        """List the workspaces that are available to the current user.
+
+        Returns:
+            List of user workspaces.
+        """
+        user = self.get_user_info()
+        orgs_and_workspaces = self.get_user_workspaces_and_orgs(user["id"])
+
+        workspaces = list()
+        for workspace in orgs_and_workspaces:
+            # Response includes organizations, which don't have workspace IDs
+            if workspace["workspaceId"] is None:
+                continue
+            workspaces.append(workspace)
+        return workspaces

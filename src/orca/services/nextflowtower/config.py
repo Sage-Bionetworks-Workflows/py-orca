@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Optional
 
+from pydantic import validator
 from pydantic.dataclasses import dataclass
 
 from orca.services.base.config import BaseConfig
@@ -18,7 +19,9 @@ class NextflowTowerConfig(BaseConfig):
         api_endpoint: API endpoint for a Nextflow Tower platform.
         auth_token: An authentication token for the platform specified
             by the ``api_endpoints`` value.
-        workspace: A Nextflow Tower workspace ID.
+        workspace: A fully-qualified Nextflow Tower workspace name
+            (i.e., prefixed with the organization name)
+            (e.g., 'Sage-Bionetworks/example-project').
 
     Class Variables:
         connection_env_var: The name of the environment variable whose
@@ -27,9 +30,30 @@ class NextflowTowerConfig(BaseConfig):
 
     api_endpoint: Optional[str] = None
     auth_token: Optional[str] = None
-    workspace: Optional[int] = None
+    workspace: Optional[str] = None
 
     connection_env_var = "NEXTFLOWTOWER_CONNECTION_URI"
+
+    @validator("workspace")
+    def validate_workspace(cls, value: str):
+        """Validate the value of `workspace`.
+
+        Args:
+            value: A fully-qualified Nextflow Tower workspace name.
+
+        Raises:
+            ValueError: If the value doesn't include two components
+                separated by a forward slash.
+
+        Returns:
+            The input value, unchanged.
+        """
+        org_name, _, workspace_name = value.partition("/")
+        if not org_name or not workspace_name or "/" in workspace_name:
+            structure = "<organization-name>/<workspace-name>"
+            message = f"Workspace ({value}) should be structured as '{structure}'."
+            raise ValueError(message)
+        return value
 
     @classmethod
     def parse_connection(cls, connection: Connection) -> dict[str, Any]:

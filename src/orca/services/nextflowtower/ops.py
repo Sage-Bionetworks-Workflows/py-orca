@@ -24,8 +24,19 @@ class NextflowTowerOps(BaseOps):
     client_factory_class = NextflowTowerClientFactory
 
     @cached_property
-    def workspace(self) -> int:
-        """The currently active Nextflow Tower workspace."""
+    def workspace_id(self) -> int:
+        """The currently active Nextflow Tower workspace ID."""
+        workspaces = self.client.list_user_workspaces()
+        for workspace in workspaces:
+            full_name = f"{workspace['orgName']}/{workspace['workspaceName']}"
+            if full_name.lower() == self.workspace.lower():
+                return workspace["workspaceId"]
+        message = f"Workspace ({self.workspace}) not available to user ({workspaces})."
+        raise ValueError(message)
+
+    @cached_property
+    def workspace(self) -> str:
+        """The currently active Nextflow Tower workspace name."""
         if self.config.workspace is None:
             message = f"Config ({self.config}) does not specify a workspace."
             raise ConfigError(message)
