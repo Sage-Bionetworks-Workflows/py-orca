@@ -48,6 +48,8 @@ class NextflowTowerConfig(BaseConfig):
         Returns:
             The input value, unchanged.
         """
+        if value is None:
+            return value
         org_name, _, workspace_name = value.partition("/")
         if not org_name or not workspace_name or "/" in workspace_name:
             structure = "<organization-name>/<workspace-name>"
