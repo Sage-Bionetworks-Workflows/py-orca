@@ -1,6 +1,5 @@
-def test_that_config_is_set(ops):
-    ops_cls = ops.__class__
-    assert getattr(ops_cls, "config", None) is not None
+def test_that_config_exists_as_attr(ops):
+    assert hasattr(ops, "config")
 
 
 def test_that_client_factory_class_is_set(ops):

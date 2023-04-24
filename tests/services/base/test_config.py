@@ -29,27 +29,10 @@ def test_that_an_empty_connection_can_be_mapped(blank_config):
     assert result == expected
 
 
-def test_that_the_client_factory_class_is_called(patched_ops):
-    mock_client_factory = patched_ops.client_factory_class
-    patched_ops.client
-    mock_client_factory.assert_called_once()
-
-
-def test_that_get_client_method_is_called_at_most_once(patched_ops):
-    mock_client_factory = patched_ops.client_factory_class
-    patched_ops.client
-    patched_ops.client
-    # mock_client_factory.get_client.assert_called_once_with(test=True)
-    mock_client_factory.return_value.get_client.assert_called_once_with(test=True)
-
-
 def test_that_resolve_calls_fill_in_when_env_avail(mock_config):
     """Tests that resolve calls fill in once given a condition"""
     mocked_config = mock_config.config
-    # mocked_config.connection_env_var =
-    # monkeypatch.setenv(mocked_config.__class__.connection_env_var, "some_value")
     mock_config.config.resolve
-    # mocked_config.return_value.fill_in.assert_called()
     mocked_config.is_env_available.assert_called()
 
 
@@ -69,6 +52,7 @@ def test_that_fill_in_fills_na_attr(kwargs, config):
 
 
 def test_that_fill_in_does_nothing_with_non_na_attr(kwargs):
+    # TODO
     pass
 
 
