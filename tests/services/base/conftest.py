@@ -16,6 +16,11 @@ def get_service_name(service_module: ModuleType) -> str:
     return service_module.__name__.split(".")[-1]
 
 
+@pytest.fixture()
+def services():
+    yield [get_service_name(service) for service in SERVICES]
+
+
 @pytest.fixture(params=SERVICES, ids=get_service_name)
 def service(request, patch_os_environ):
     service_module = request.param
