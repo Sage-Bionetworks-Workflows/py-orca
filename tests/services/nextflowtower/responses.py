@@ -11,12 +11,12 @@ https://tower-dev.sagebionetworks.org/api/openapi
 
 get_user_info = {
     "user": {
-        "id": 2,
-        "userName": "bgrande",
-        "email": "bruno.grande@sagebase.org",
+        "id": 100,
+        "userName": "foo",
+        "email": "foo@example.com",
         "firstName": None,
         "lastName": None,
-        "organization": "@Sage-Bionetworks",
+        "organization": "@Foo-Bar",
         "description": None,
         "avatar": "REDACTED",
         "trusted": True,
@@ -35,4 +35,31 @@ get_user_info = {
     },
     "needConsent": False,
     "defaultWorkspaceId": None,
+}
+
+
+get_user_workspaces_and_orgs = {
+    "orgsAndWorkspaces": [
+        {
+            "orgId": 123456789,
+            "orgName": "Foo-Bar",
+            "orgLogoUrl": None,
+            "workspaceId": None,
+            "workspaceName": None,
+        },
+        {
+            "orgId": 123456789,
+            "orgName": "Foo-Bar",
+            "orgLogoUrl": None,
+            "workspaceId": 54321,
+            "workspaceName": "project-1",
+        },
+        {
+            "orgId": 123456789,
+            "orgName": "Foo-Bar",
+            "orgLogoUrl": None,
+            "workspaceId": 98765,
+            "workspaceName": "project-2",
+        },
+    ]
 }

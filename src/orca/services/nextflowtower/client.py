@@ -19,8 +19,9 @@ class NextflowTowerClient:
     auth_token: str
     api_endpoint: str
 
+    @staticmethod
     def update_kwarg(
-        self, kwargs: dict[str, Any], key1: str, key2: str, default: Any
+        kwargs: dict[str, Any], key1: str, key2: str, default: Any
     ) -> None:
         """Ensure a default value for a nested key in kwargs.
 
@@ -62,11 +63,6 @@ class NextflowTowerClient:
         Returns:
             The raw Response object to allow for special handling
         """
-        valid_methods = {"GET", "PUT", "POST", "DELETE"}
-        if method not in valid_methods:
-            message = f"Method ({method}) not among valid options ({valid_methods})."
-            raise ValueError(message)
-
         url = f"{self.api_endpoint}/{path}"
 
         auth_header = f"Bearer {self.auth_token}"
@@ -89,43 +85,43 @@ class NextflowTowerClient:
         response.raise_for_status()
         return response.json()
 
-    def request_paged(self, method: str, path: str, **kwargs) -> list[dict[str, Any]]:
-        """Iterate through pages of results for a given request.
+    # def request_paged(self, method: str, path: str, **kwargs) -> list[dict[str, Any]]:
+    #     """Iterate through pages of results for a given request.
 
-        See ``TowerClient.request`` for argument definitions.
+    #     See ``TowerClient.request`` for argument definitions.
 
-        Raises:
-            HTTPError: If the response doesn't match the expectation
-                for a paged endpoint.
+    #     Raises:
+    #         HTTPError: If the response doesn't match the expectation
+    #             for a paged endpoint.
 
-        Returns:
-            The cumulative list of items from all pages.
-        """
-        self.update_kwarg(kwargs, "params", "max", 50)
-        self.update_kwarg(kwargs, "params", "offset", 0)
+    #     Returns:
+    #         The cumulative list of items from all pages.
+    #     """
+    #     self.update_kwarg(kwargs, "params", "max", 50)
+    #     self.update_kwarg(kwargs, "params", "offset", 0)
 
-        num_items = 0
-        total_size = 1  # Artificial value for initiating the while-loop
+    #     num_items = 0
+    #     total_size = 1  # Artificial value for initiating the while-loop
 
-        all_items = list()
-        while num_items < total_size:
-            kwargs["params"]["offset"] = num_items
-            json = self.request_json(method, path, **kwargs)
+    #     all_items = list()
+    #     while num_items < total_size:
+    #         kwargs["params"]["offset"] = num_items
+    #         json = self.request_json(method, path, **kwargs)
 
-            if "totalSize" not in json:
-                message = f"'totalSize' not in response JSON ({json}) as expected."
-                raise HTTPError(message)
-            total_size = json.pop("totalSize")
+    #         if "totalSize" not in json:
+    #             message = f"'totalSize' not in response JSON ({json}) as expected."
+    #             raise HTTPError(message)
+    #         total_size = json.pop("totalSize")
 
-            if len(json) != 1:
-                message = f"Expected one other key aside from 'totalSize' ({json})."
-                raise HTTPError(message)
-            _, items = json.popitem()
+    #         if len(json) != 1:
+    #             message = f"Expected one other key aside from 'totalSize' ({json})."
+    #             raise HTTPError(message)
+    #         _, items = json.popitem()
 
-            num_items += len(items)
-            all_items.extend(items)
+    #         num_items += len(items)
+    #         all_items.extend(items)
 
-        return all_items
+    #     return all_items
 
     def get(self, path: str, **kwargs) -> dict[str, Any]:
         """Send an auth'ed GET request and parse the JSON response.
