@@ -78,6 +78,7 @@ jobs:
         env:
           # New variables should match a `passenv` pattern under `[testenv]` in tox.ini
           SEVENBRIDGES_CONNECTION_URI: ${{ secrets.SEVENBRIDGES_CONNECTION_URI }}
+          NEXTFLOWTOWER_CONNECTION_URI: ${{ secrets.NEXTFLOWTOWER_CONNECTION_URI }}
         run: >-
           pipx run --spec 'tox~=3.0' tox
           --installpkg '${{ needs.prepare.outputs.wheel-path }}'
