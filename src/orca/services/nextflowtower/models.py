@@ -8,7 +8,7 @@ from pydantic.dataclasses import dataclass
 
 
 @dataclass(kw_only=False)
-class LaunchSpec:
+class LaunchInfo:
     """Workflow launch specification"""
 
     compute_env_id: str

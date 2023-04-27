@@ -23,7 +23,7 @@ class NextflowTowerClient:
     auth_token: str
     api_endpoint: str
 
-    LaunchSpec = models.LaunchSpec
+    LaunchInfo = models.LaunchInfo
 
     @staticmethod
     def update_kwarg(
@@ -224,13 +224,13 @@ class NextflowTowerClient:
 
     def launch_workflow(
         self,
-        launch_spec: models.LaunchSpec,
+        launch_info: models.LaunchInfo,
         workspace_id: Optional[int] = None,
     ) -> str:
         """Launch a workflow in the target workspace.
 
         Args:
-            launch_spec: Description of which workflow to
+            launch_info: Description of which workflow to
                 launch and how, including input parameters.
 
         Returns:
@@ -238,6 +238,6 @@ class NextflowTowerClient:
         """
         path = "/workflow/launch"
         params = self.generate_params(workspace_id)
-        payload = launch_spec.to_dict()
+        payload = launch_info.to_dict()
         response = self.post(path, params=params, json=payload)
         return self.unwrap(response, "workflowId")

@@ -28,7 +28,7 @@ def test_that_a_valid_client_can_be_constructed_and_tested(client):
 @pytest.mark.integration
 def test_that_a_workflow_can_be_launched(client):
     scratch_bucket = "s3://orca-service-test-project-tower-scratch/"
-    launch_spec = NextflowTowerClient.LaunchSpec(
+    launch_spec = NextflowTowerClient.LaunchInfo(
         compute_env_id="5ykJFs33AE3d3AgThavz3b",
         pipeline="nf-core/rnaseq",
         revision="3.11.2",
