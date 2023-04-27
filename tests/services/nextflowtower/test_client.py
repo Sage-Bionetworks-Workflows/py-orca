@@ -1,8 +1,6 @@
 import pytest
 from requests.exceptions import HTTPError
 
-from . import responses
-
 
 def test_that_update_kwargs_updates_an_empty_dictionary(client):
     kwargs = {}
@@ -32,12 +30,13 @@ def test_that_update_kwargs_fails_with_an_incompatible_type(client):
         client.update_kwarg(kwargs, "foo", "bar", 123)
 
 
-def test_that_get_user_info_works(client, mocker):
+def test_that_get_user_info_works(client, mocker, get_response):
+    expected = get_response("get_user_info")
     mock = mocker.patch.object(client, "request_json")
-    mock.return_value = responses.get_user_info
-    response = client.get_user_info()
+    mock.return_value = expected
+    actual = client.get_user_info()
     mock.assert_called_once()
-    assert response == responses.get_user_info["user"]
+    assert actual == expected["user"]
 
 
 def test_that_get_user_info_fails_with_nonstandard_response(client, mocker):
@@ -47,10 +46,10 @@ def test_that_get_user_info_fails_with_nonstandard_response(client, mocker):
         client.get_user_info()
 
 
-def test_that_list_user_workspaces_works(client, mocker):
+def test_that_list_user_workspaces_works(client, mocker, get_response):
     mocker.patch.object(client, "get_user_info")
     mock = mocker.patch.object(client, "request_json")
-    mock.return_value = responses.get_user_workspaces_and_orgs
+    mock.return_value = get_response("get_user_workspaces_and_orgs")
     response = client.list_user_workspaces()
     mock.assert_called_once()
     assert len(response) == 2

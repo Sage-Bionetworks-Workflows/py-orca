@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 import pytest
 
 from orca.services.nextflowtower import (
@@ -5,6 +7,8 @@ from orca.services.nextflowtower import (
     NextflowTowerConfig,
     NextflowTowerOps,
 )
+
+from . import responses
 
 
 @pytest.fixture
@@ -19,5 +23,16 @@ def config(patch_os_environ):
 
 
 @pytest.fixture
-def ops(config):
+def ops(config, client, mocker):
+    mock = mocker.patch.object(NextflowTowerOps, "client")
+    mock.return_value = client
     yield NextflowTowerOps(config)
+
+
+@pytest.fixture
+def get_response():
+    def _get_response(name: str) -> dict:
+        response = getattr(responses, name)
+        return deepcopy(response)
+
+    yield _get_response
