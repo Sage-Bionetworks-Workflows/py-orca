@@ -1,13 +1,10 @@
-from collections.abc import Collection
-from typing import Any, Optional, TypeVar
+from typing import Any, Optional
 
 import requests
 from pydantic.dataclasses import dataclass
 from requests.exceptions import HTTPError
 
 from orca.services.nextflowtower import models
-
-OptCollection = TypeVar("OptCollection", Collection, None)
 
 
 @dataclass(kw_only=False)
