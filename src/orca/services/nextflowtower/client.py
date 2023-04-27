@@ -1,11 +1,15 @@
-from typing import Any
+from collections.abc import Collection
+from typing import Any, Optional, TypeVar
 
 import requests
 from pydantic.dataclasses import dataclass
 from requests.exceptions import HTTPError
 
+from orca.services.nextflowtower import models
 
-# TODO: Consider creating a `client` submodule folder to organize methods
+OptCollection = TypeVar("OptCollection", Collection, None)
+
+
 @dataclass(kw_only=False)
 class NextflowTowerClient:
     """Simple Python client for making requests to Nextflow Tower.
@@ -18,6 +22,8 @@ class NextflowTowerClient:
 
     auth_token: str
     api_endpoint: str
+
+    LaunchSpec = models.LaunchSpec
 
     @staticmethod
     def update_kwarg(
@@ -133,6 +139,31 @@ class NextflowTowerClient:
         """
         return self.request_json("GET", path, **kwargs)
 
+    def post(self, path: str, **kwargs) -> dict[str, Any]:
+        """Send an auth'ed POST request and parse the JSON response.
+
+        See ``TowerClient.request`` for argument definitions.
+
+        Returns:
+            A dictionary from deserializing the JSON response.
+        """
+        return self.request_json("POST", path, **kwargs)
+
+    def unwrap(self, response: dict[str, Any], key: str) -> Any:
+        """Unwrap nested key in JSON response.
+
+        Args:
+            response: Raw JSON response.
+            key: Top-level key.
+
+        Returns:
+            Unwrapped/unnested response.
+        """
+        if key not in response:
+            message = f"Expecting '{key}' key in response ({response})."
+            raise HTTPError(message)
+        return response[key]
+
     def get_user_info(self) -> dict[str, Any]:
         """Describe current user.
 
@@ -143,12 +174,8 @@ class NextflowTowerClient:
             Current user.
         """
         path = "/user-info"
-        key = "user"
         response = self.get(path)
-        if key not in response:
-            message = f"Expecting '{key}' key in response ({response})."
-            raise HTTPError(message)
-        return response[key]
+        return self.unwrap(response, "user")
 
     def get_user_workspaces_and_orgs(self, user_id: int) -> list[dict[str, Any]]:
         """List the workspaces and organizations of a given user.
@@ -160,12 +187,8 @@ class NextflowTowerClient:
             Workspaces and organizations.
         """
         path = f"/user/{user_id}/workspaces"
-        key = "orgsAndWorkspaces"
         response = self.get(path)
-        if key not in response:
-            message = f"Expecting '{key}' key in response ({response})."
-            raise HTTPError(message)
-        return response[key]
+        return self.unwrap(response, "orgsAndWorkspaces")
 
     # TODO: Should this higher-level method exist here or in Ops?
     def list_user_workspaces(self) -> list[dict[str, Any]]:
@@ -184,3 +207,37 @@ class NextflowTowerClient:
                 continue
             workspaces.append(workspace)
         return workspaces
+
+    def generate_params(self, workspace_id: Optional[int]) -> dict[str, Any]:
+        """Generate URL query parameters.
+
+        Args:
+            workspace_id: _description_
+
+        Returns:
+            _description_
+        """
+        params = {}
+        if workspace_id:
+            params["workspaceId"] = int(workspace_id)
+        return params
+
+    def launch_workflow(
+        self,
+        launch_spec: models.LaunchSpec,
+        workspace_id: Optional[int] = None,
+    ) -> str:
+        """Launch a workflow in the target workspace.
+
+        Args:
+            launch_spec: Description of which workflow to
+                launch and how, including input parameters.
+
+        Returns:
+            Workflow ID.
+        """
+        path = "/workflow/launch"
+        params = self.generate_params(workspace_id)
+        payload = launch_spec.to_dict()
+        response = self.post(path, params=params, json=payload)
+        return self.unwrap(response, "workflowId")

@@ -4,6 +4,7 @@ from sevenbridges.models.enums import TaskStatus
 from orca.services.sevenbridges import SevenBridgesHook
 
 
+@pytest.mark.cost
 @pytest.mark.acceptance
 def test_cavatica_launch_poc_v2(run_id):
     def create_task():
