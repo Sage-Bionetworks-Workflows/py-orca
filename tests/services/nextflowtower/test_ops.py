@@ -1,5 +1,4 @@
 import pytest
-from unittest.mock import patch
 
 from orca.errors import ConfigError
 from orca.services.nextflowtower import NextflowTowerConfig, NextflowTowerOps

@@ -62,7 +62,8 @@ class NextflowTowerOps(BaseOps):
             workflow_id (str): The ID number for a workflow run to get information about
 
         Returns:
-            tuple: Tuple containing 1. status (str) and 2. Whether the workflow is done (boolean)
+            tuple: Tuple containing 1. status (str) and
+            2. Whether the workflow is done (boolean)
         """
         response = self.get_workflow(workflow_id=workflow_id)
         return (

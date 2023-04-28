@@ -64,7 +64,7 @@ get_user_workspaces_and_orgs = {
     ]
 }
 
-get_workflow_complete = {
+get_workflow_complete: dict = {
     "workflow": {
         "id": "123456789",
         "submit": "2023-04-28T16:22:31Z",
@@ -80,7 +80,10 @@ get_workflow_complete = {
         "userName": "example-user",
         "scriptId": "123",
         "revision": None,
-        "commandLine": "nextflow run nextflow-io/example-workflow -name example-run -with-tower 'https://tower.sagebionetworks.org/api' -r 123 -resume abc-abc-abc-abc-abc",
+        "commandLine": "nextflow run nextflow-io/example-workflow\
+              -name example-run -with-tower\
+                'https://tower.sagebionetworks.org/api'\
+                -r 123 -resume abc-abc-abc-abc-abc",
         "projectName": "nextflow-io/example-workflow",
         "scriptName": "main.nf",
         "launchId": "abc",
@@ -149,7 +152,7 @@ get_workflow_complete = {
     }
 }
 
-get_workflow_incomplete = {
+get_workflow_incomplete: dict = {
     "workflow": {
         "id": "123456789",
         "submit": "2023-04-28T16:22:31Z",
@@ -165,7 +168,10 @@ get_workflow_incomplete = {
         "userName": "example-user",
         "scriptId": "123",
         "revision": None,
-        "commandLine": "nextflow run nextflow-io/example-workflow -name example-run -with-tower 'https://tower.sagebionetworks.org/api' -r 123 -resume abc-abc-abc-abc-abc",
+        "commandLine": "nextflow run nextflow-io/example-workflow\
+              -name example-run -with-tower\
+                'https://tower.sagebionetworks.org/api'\
+                -r 123 -resume abc-abc-abc-abc-abc",
         "projectName": "nextflow-io/example-workflow",
         "scriptName": "main.nf",
         "launchId": "abc",
