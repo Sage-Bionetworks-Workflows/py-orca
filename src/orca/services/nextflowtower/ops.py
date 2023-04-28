@@ -41,3 +41,31 @@ class NextflowTowerOps(BaseOps):
             message = f"Config ({self.config}) does not specify a workspace."
             raise ConfigError(message)
         return self.config.workspace
+
+    def get_workflow(self, workflow_id: str) -> dict:
+        """Gets available information about a workflow run
+
+        Attributes:
+            workflow_id (str): The ID number for a workflow run to get information about
+
+        Returns:
+            response (dict): Dictionary containing information about the workflow run
+        """
+        path = f"/workflow/{workflow_id}"
+        response = self.client.get(path=path, params={"workspaceId": self.workspace_id})
+        return response
+
+    def get_workflow_status(self, workflow_id: str) -> tuple:
+        """Gets status of workflow run
+
+        Args:
+            workflow_id (str): The ID number for a workflow run to get information about
+
+        Returns:
+            tuple: Tuple containing 1. status (str) and 2. Whether the workflow is done (boolean)
+        """
+        response = self.get_workflow(workflow_id=workflow_id)
+        return (
+            response["workflow"]["status"],
+            bool(response["workflow"]["complete"]),
+        )
