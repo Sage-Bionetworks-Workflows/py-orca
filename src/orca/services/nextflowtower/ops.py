@@ -61,22 +61,36 @@ class NextflowTowerOps(BaseOps):
         """
         envs = self.client.list_compute_envs(self.workspace_id, "AVAILABLE")
         if filter:
-            envs = [env for env in envs if filter in env["name"]]
+            envs = [env for env in envs if filter in env.name]
         if len(envs) == 0:
             message = f"No matching compute environments ({filter=})."
             raise ValueError(message)
         elif len(envs) == 1:
-            return envs[0]["id"]
+            return envs[0].id
 
-        # Sort by dateCreated if there are multiple matches
-        envs_info = list()
-        for env in envs:
-            info = self.client.get_compute_env(env["id"], self.workspace_id)
-            envs_info.append(info)
+        # Fill in additional info and sort by dateCreated if there are multiple matches
+        envs = [self.client.get_compute_env(env.id, self.workspace_id) for env in envs]
+        envs = sorted(envs, key=lambda x: x.date_created)
+        latest_env = envs[-1]
+        return latest_env.id
 
-        envs_info = sorted(envs_info, key=lambda x: x["dateCreated"])
-        latest_env = envs_info[-1]
-        return latest_env["id"]
+    def create_label(self, name: str) -> int:
+        """Create (or get existing) label.
+
+        Args:
+            name: Label name.
+
+        Returns:
+            Label ID.
+        """
+        labels = self.client.list_labels(self.workspace_id)
+        for label in labels:
+            if label.resource:
+                continue
+            if label.name == name:
+                return label.id
+        label = self.client.create_label(name, self.workspace_id)
+        return label.id
 
     # TODO: Once get_workflow() is available, try to make idempotent
     def launch_workflow(
@@ -99,7 +113,7 @@ class NextflowTowerOps(BaseOps):
 
         # Update launch_info with compute_env defaults
         launch_info.fill_in("compute_env_id", compute_env_id)
-        launch_info.fill_in("work_dir", compute_env["config"]["workDir"])
-        launch_info.fill_in("pre_run_script", compute_env["config"]["preRunScript"])
+        launch_info.fill_in("work_dir", compute_env.work_dir)
+        launch_info.fill_in("pre_run_script", compute_env.pre_run_script)
 
         return self.client.launch_workflow(launch_info, self.workspace_id)

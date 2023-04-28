@@ -2,14 +2,68 @@ import json
 from collections.abc import Collection
 from dataclasses import field
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any, Optional, Self
 
 from pydantic.dataclasses import dataclass
 
 
 @dataclass(kw_only=False)
+class User:
+    """Nextflow Tower user."""
+
+    id: int
+    username: str
+    email: str
+
+    @classmethod
+    def from_response(cls, response: dict[str, Any]) -> Self:
+        """Create user from API JSON response.
+
+        Returns:
+            User instance.
+        """
+        return cls(response["id"], response["userName"], response["email"])
+
+
+@dataclass(kw_only=False)
+class Organization:
+    """Nextflow Tower organization."""
+
+    id: int
+    name: str
+
+    @classmethod
+    def from_response(cls, response: dict[str, Any]) -> Self:
+        """Create organization from API JSON response.
+
+        Returns:
+            Organization instance.
+        """
+        return cls(response["orgId"], response["orgName"])
+
+
+@dataclass(kw_only=False)
+class Workspace:
+    """Nextflow Tower workspace."""
+
+    id: int
+    name: str
+    org: Organization
+
+    @classmethod
+    def from_response(cls, response: dict[str, Any]) -> Self:
+        """Create workspace from API JSON response.
+
+        Returns:
+            Workspace instance.
+        """
+        org = Organization.from_response(response)
+        return cls(response["workspaceId"], response["workspaceName"], org)
+
+
+@dataclass(kw_only=False)
 class LaunchInfo:
-    """Workflow launch specification"""
+    """Nextflow Tower workflow launch specification."""
 
     compute_env_id: str
     pipeline: str
@@ -90,3 +144,73 @@ class LaunchInfo:
             }
         }
         return output
+
+
+@dataclass(kw_only=False)
+class Label:
+    """Nextflow Tower workflow run label."""
+
+    id: int
+    name: str
+    value: Optional[str]
+    resource: bool
+
+    @classmethod
+    def from_response(cls, response: dict[str, Any]) -> Self:
+        """Create label from API JSON response.
+
+        Returns:
+            Label instance.
+        """
+        return cls(**response)
+
+
+@dataclass(kw_only=False)
+class ComputeEnvSummary:
+    """Nextflow Tower compute environment summary."""
+
+    id: str
+    name: str
+    status: str
+    work_dir: str
+    raw: dict
+
+    @classmethod
+    def from_response(cls, response: dict[str, Any]) -> Self:
+        """Create compute environment from API JSON response.
+
+        Returns:
+            Compute environment instance.
+        """
+        return cls(
+            response["id"],
+            response["name"],
+            response["status"],
+            response["workDir"],
+            response,
+        )
+
+
+@dataclass(kw_only=False)
+class ComputeEnv(ComputeEnvSummary):
+    """Nextflow Tower compute environment details."""
+
+    date_created: datetime
+    pre_run_script: str
+
+    @classmethod
+    def from_response(cls, response: dict[str, Any]) -> Self:
+        """Create compute environment from API JSON response.
+
+        Returns:
+            Compute environment instance.
+        """
+        return cls(
+            id=response["id"],
+            name=response["name"],
+            status=response["status"],
+            work_dir=response["config"]["workDir"],
+            date_created=datetime.fromisoformat(response["dateCreated"]),
+            pre_run_script=response["config"]["preRunScript"],
+            raw=response,
+        )

@@ -20,8 +20,6 @@ class NextflowTowerClient:
     auth_token: str
     api_endpoint: str
 
-    LaunchInfo = models.LaunchInfo
-
     @staticmethod
     def update_kwarg(
         kwargs: dict[str, Any], key1: str, key2: str, default: Any
@@ -167,7 +165,7 @@ class NextflowTowerClient:
             raise HTTPError(message)
         return response[key]
 
-    def get_user_info(self) -> dict[str, Any]:
+    def get_user_info(self) -> models.User:
         """Describe current user.
 
         Returns:
@@ -175,34 +173,40 @@ class NextflowTowerClient:
         """
         path = "/user-info"
         response = self.get(path)
-        return self.unwrap(response, "user")
+        unwrapped = self.unwrap(response, "user")
+        return models.User.from_response(unwrapped)
 
-    def list_user_workspaces_and_orgs(self, user_id: int) -> list[dict[str, Any]]:
+    def list_user_workspaces_and_orgs(
+        self,
+        user_id: int,
+    ) -> list[models.Workspace | models.Organization]:
         """List the workspaces and organizations of a given user.
 
         Returns:
-            Workspaces and organizations.
+            List of workspaces and organizations.
         """
         path = f"/user/{user_id}/workspaces"
         response = self.get(path)
-        return self.unwrap(response, "orgsAndWorkspaces")
+        items = self.unwrap(response, "orgsAndWorkspaces")
+        objects: list[models.Organization | models.Workspace] = list()
+        for item in items:
+            if item["workspaceId"]:
+                workspace = models.Workspace.from_response(item)
+                objects.append(workspace)
+            else:
+                org = models.Organization.from_response(item)
+                objects.append(org)
+        return objects
 
-    def list_user_workspaces(self) -> list[dict[str, Any]]:
+    def list_user_workspaces(self) -> list[models.Workspace]:
         """List the workspaces that are available to the current user.
 
         Returns:
             List of user workspaces.
         """
         user = self.get_user_info()
-        orgs_and_workspaces = self.list_user_workspaces_and_orgs(user["id"])
-
-        workspaces = list()
-        for workspace in orgs_and_workspaces:
-            # Response includes organizations, which don't have workspace IDs
-            if workspace["workspaceId"] is None:
-                continue
-            workspaces.append(workspace)
-        return workspaces
+        items = self.list_user_workspaces_and_orgs(user.id)
+        return [item for item in items if isinstance(item, models.Workspace)]
 
     def generate_params(
         self,
@@ -231,7 +235,7 @@ class NextflowTowerClient:
         self,
         compute_env_id: str,
         workspace_id: Optional[int] = None,
-    ) -> dict:
+    ) -> models.ComputeEnv:
         """Retrieve information about a given compute environment.
 
         Args:
@@ -239,18 +243,19 @@ class NextflowTowerClient:
             workspace_id: Tower workspace ID.
 
         Returns:
-            Information about the compute environment.
+            Compute environment instance.
         """
         path = f"/compute-envs/{compute_env_id}"
         params = self.generate_params(workspace_id)
         response = self.get(path, params=params)
-        return self.unwrap(response, "computeEnv")
+        unwrapped = self.unwrap(response, "computeEnv")
+        return models.ComputeEnv.from_response(unwrapped)
 
     def list_compute_envs(
         self,
         workspace_id: Optional[int] = None,
         status: Optional[str] = None,
-    ) -> dict:
+    ) -> list[models.ComputeEnvSummary]:
         """List all compute environments.
 
         Args:
@@ -264,9 +269,14 @@ class NextflowTowerClient:
         path = "/compute-envs"
         params = self.generate_params(workspace_id, status=status)
         response = self.get(path, params=params)
-        return self.unwrap(response, "computeEnvs")
+        items = self.unwrap(response, "computeEnvs")
+        return [models.ComputeEnvSummary.from_response(item) for item in items]
 
-    def create_label(self, name: str, workspace_id: Optional[int] = None) -> int:
+    def create_label(
+        self,
+        name: str,
+        workspace_id: Optional[int] = None,
+    ) -> models.Label:
         """Create a workflow label.
 
         Args:
@@ -274,15 +284,15 @@ class NextflowTowerClient:
             workspace_id: Tower workspace ID. Defaults to None.
 
         Returns:
-            Label ID.
+            Label instance.
         """
         path = "/labels"
         params = self.generate_params(workspace_id)
         payload = {"name": name, "resource": False}
         response = self.post(path, params=params, json=payload)
-        return self.unwrap(response, "id")
+        return models.Label.from_response(response)
 
-    def list_labels(self, workspace_id: Optional[int] = None) -> dict:
+    def list_labels(self, workspace_id: Optional[int] = None) -> list[models.Label]:
         """List all available labels.
 
         Args:
@@ -294,7 +304,8 @@ class NextflowTowerClient:
         path = "/labels"
         params = self.generate_params(workspace_id)
         response = self.get(path, params=params)
-        return self.unwrap(response, "labels")
+        items = self.unwrap(response, "labels")
+        return [models.Label.from_response(item) for item in items]
 
     def launch_workflow(
         self,
@@ -309,7 +320,7 @@ class NextflowTowerClient:
             workspace_id: Tower workspace ID.
 
         Returns:
-            Workflow ID.
+            Workflow run ID.
         """
         path = "/workflow/launch"
         params = self.generate_params(workspace_id)

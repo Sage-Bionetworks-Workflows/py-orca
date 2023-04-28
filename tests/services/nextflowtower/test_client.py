@@ -1,7 +1,7 @@
 import pytest
 from requests.exceptions import HTTPError
 
-from orca.services.nextflowtower import NextflowTowerClient
+from orca.services.nextflowtower import models
 
 
 def test_that_update_kwargs_updates_an_empty_dictionary(client):
@@ -38,7 +38,7 @@ def test_that_get_user_info_works(client, mocker, get_response):
     mock.return_value = expected
     actual = client.get_user_info()
     mock.assert_called_once()
-    assert actual == expected["user"]
+    assert actual == models.User.from_response(expected["user"])
 
 
 def test_that_get_user_info_fails_with_nonstandard_response(client, mocker):
@@ -70,7 +70,7 @@ def test_that_get_compute_env_works(client, mocker, get_response):
     mock.return_value = get_response("get_compute_env")
     response = client.get_compute_env("5ykJF", 98765)
     mock.assert_called_once()
-    assert response["id"] == "5ykJF"
+    assert response.id == "5ykJF"
 
 
 def test_that_list_compute_envs_works(client, mocker, get_response):
@@ -94,7 +94,7 @@ def test_that_create_label_works(client, mocker, get_response):
     mock.return_value = get_response("create_label")
     response = client.create_label("foo", 98765)
     mock.assert_called_once()
-    assert response == 12345
+    assert response.id == 12345
 
 
 def test_that_list_labels_works(client, mocker, get_response):
@@ -104,8 +104,9 @@ def test_that_list_labels_works(client, mocker, get_response):
     mock = mocker.patch.object(client, "request_json")
     mock.side_effect = [page_1, page_2]
     response = client.list_labels(98765)
+    expected = [models.Label.from_response(item) for item in full_response["labels"]]
     assert mock.call_count == 2
-    assert response == full_response["labels"]
+    assert response == expected
 
 
 def test_for_an_error_when_total_size_doesnt_match_items(client, mocker, get_response):
@@ -121,7 +122,7 @@ def test_for_an_error_when_total_size_doesnt_match_items(client, mocker, get_res
 def test_that_launch_workflow_works(client, mocker, get_response):
     mock = mocker.patch.object(client, "request_json")
     mock.return_value = get_response("launch_workflow")
-    launch_spec = NextflowTowerClient.LaunchInfo(
+    launch_spec = models.LaunchInfo(
         compute_env_id="foo",
         pipeline="bar",
         work_dir="s3://path",
