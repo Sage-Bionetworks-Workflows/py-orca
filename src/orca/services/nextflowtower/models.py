@@ -24,8 +24,8 @@ class LaunchInfo:
     workspace_secrets: list[str] = field(default_factory=list)
 
     @staticmethod
-    def dedup(items: Optional[Collection[str]]) -> Optional[list[str]]:
-        """Deduplicate elements or allow None to pass through.
+    def dedup(items: Collection[str]) -> list[str]:
+        """Deduplicate items in a collection.
 
         Args:
             items: Collection of items.
@@ -33,10 +33,7 @@ class LaunchInfo:
         Returns:
             Deduplicated collection or None.
         """
-        if items is None:
-            return None
-        else:
-            return list(set(items))
+        return list(set(items))
 
     @staticmethod
     def get_current_timestamp():

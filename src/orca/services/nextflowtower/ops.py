@@ -1,4 +1,5 @@
 from functools import cached_property
+from typing import Optional
 
 from pydantic.dataclasses import dataclass
 
@@ -41,3 +42,37 @@ class NextflowTowerOps(BaseOps):
             message = f"Config ({self.config}) does not specify a workspace."
             raise ConfigError(message)
         return self.config.workspace
+
+    def get_latest_compute_env(self, filter: Optional[str] = None) -> str:
+        """Get latest available compute environment matching filter.
+
+        Args:
+            filter: A string to filter compute environment names.
+                For example, "ondemand" for filtering for on-demand
+                compute environments. Default to None, which doesn't
+                apply any filtering.
+
+        Raises:
+            ValueError: If no matching compute environments exist.
+
+        Returns:
+            Compute environment ID.
+        """
+        envs = self.client.list_compute_envs(self.workspace_id, "AVAILABLE")
+        if filter:
+            envs = [env for env in envs if filter in env["name"]]
+        if len(envs) == 0:
+            message = f"No matching compute environments ({filter=})."
+            raise ValueError(message)
+        elif len(envs) == 1:
+            return envs[0]["id"]
+
+        # Sort by dateCreated if there are multiple matches
+        envs_info = list()
+        for env in envs:
+            info = self.client.get_compute_env(env["id"], self.workspace_id)
+            envs_info.append(info)
+
+        envs_info = sorted(envs_info, key=lambda x: x["dateCreated"])
+        latest_env = envs_info[-1]
+        return latest_env["id"]

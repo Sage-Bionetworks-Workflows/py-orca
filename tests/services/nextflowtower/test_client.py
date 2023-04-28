@@ -1,6 +1,8 @@
 import pytest
 from requests.exceptions import HTTPError
 
+from orca.services.nextflowtower import NextflowTowerClient
+
 
 def test_that_update_kwargs_updates_an_empty_dictionary(client):
     kwargs = {}
@@ -61,3 +63,40 @@ def test_that_list_user_workspaces_fails_with_nonstandard_response(client, mocke
     mock.return_value = {"message": "foobar"}
     with pytest.raises(HTTPError):
         client.list_user_workspaces()
+
+
+def test_that_get_compute_env_works(client, mocker, get_response):
+    mock = mocker.patch.object(client, "request_json")
+    mock.return_value = get_response("get_compute_env")
+    response = client.get_compute_env("5ykJF", 98765)
+    mock.assert_called_once()
+    assert response["id"] == "5ykJF"
+
+
+def test_that_list_compute_envs_works(client, mocker, get_response):
+    mock = mocker.patch.object(client, "request_json")
+    mock.return_value = get_response("list_compute_envs")
+    response = client.list_compute_envs(98765)
+    mock.assert_called_once()
+    assert len(response) == 3
+
+
+def test_that_list_compute_envs_works_with_status_filter(client, mocker, get_response):
+    mock = mocker.patch.object(client, "request_json")
+    mock.return_value = get_response("list_compute_envs")
+    response = client.list_compute_envs(98765, "AVAILABLE")
+    mock.assert_called_once()
+    assert len(response) == 3
+
+
+def test_that_launch_workflow_works(client, mocker, get_response):
+    mock = mocker.patch.object(client, "request_json")
+    mock.return_value = get_response("launch_workflow")
+    launch_spec = NextflowTowerClient.LaunchInfo(
+        compute_env_id="foo",
+        pipeline="bar",
+        work_dir="s3://path",
+        profiles=["test"],
+    )
+    client.launch_workflow(launch_spec)
+    mock.assert_called_once()

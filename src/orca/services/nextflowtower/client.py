@@ -154,7 +154,7 @@ class NextflowTowerClient:
             key: Top-level key.
 
         Returns:
-            Unwrapped/unnested response.
+            Unnested response.
         """
         if key not in response:
             message = f"Expecting '{key}' key in response ({response})."
@@ -164,9 +164,6 @@ class NextflowTowerClient:
     def get_user_info(self) -> dict[str, Any]:
         """Describe current user.
 
-        Raises:
-            HTTPError: If the response lacks the expected keys.
-
         Returns:
             Current user.
         """
@@ -174,11 +171,8 @@ class NextflowTowerClient:
         response = self.get(path)
         return self.unwrap(response, "user")
 
-    def get_user_workspaces_and_orgs(self, user_id: int) -> list[dict[str, Any]]:
+    def list_user_workspaces_and_orgs(self, user_id: int) -> list[dict[str, Any]]:
         """List the workspaces and organizations of a given user.
-
-        Raises:
-            HTTPError: If the response lacks the expected keys.
 
         Returns:
             Workspaces and organizations.
@@ -187,7 +181,6 @@ class NextflowTowerClient:
         response = self.get(path)
         return self.unwrap(response, "orgsAndWorkspaces")
 
-    # TODO: Should this higher-level method exist here or in Ops?
     def list_user_workspaces(self) -> list[dict[str, Any]]:
         """List the workspaces that are available to the current user.
 
@@ -195,7 +188,7 @@ class NextflowTowerClient:
             List of user workspaces.
         """
         user = self.get_user_info()
-        orgs_and_workspaces = self.get_user_workspaces_and_orgs(user["id"])
+        orgs_and_workspaces = self.list_user_workspaces_and_orgs(user["id"])
 
         workspaces = list()
         for workspace in orgs_and_workspaces:
@@ -205,19 +198,67 @@ class NextflowTowerClient:
             workspaces.append(workspace)
         return workspaces
 
-    def generate_params(self, workspace_id: Optional[int]) -> dict[str, Any]:
+    def generate_params(
+        self,
+        workspace_id: Optional[int],
+        **kwargs,
+    ) -> dict[str, Any]:
         """Generate URL query parameters.
 
         Args:
-            workspace_id: _description_
+            workspace_id: Tower workspace ID.
+            **kwargs: Additional query parameters that are included
+                if they are not set to None.
 
         Returns:
-            _description_
+            URL query parameters based on input.
         """
         params = {}
         if workspace_id:
             params["workspaceId"] = int(workspace_id)
+        for name, value in kwargs.items():
+            if value is not None:
+                params[name] = value
         return params
+
+    def get_compute_env(
+        self,
+        compute_env_id: str,
+        workspace_id: Optional[int] = None,
+    ) -> dict:
+        """Retrieve information about a given compute environment.
+
+        Args:
+            compute_env_id: Compute environment ID.
+            workspace_id: Tower workspace ID.
+
+        Returns:
+            Information about the compute environment.
+        """
+        path = f"/compute-envs/{compute_env_id}"
+        params = self.generate_params(workspace_id)
+        response = self.get(path, params=params)
+        return self.unwrap(response, "computeEnv")
+
+    def list_compute_envs(
+        self,
+        workspace_id: Optional[int] = None,
+        status: Optional[str] = None,
+    ) -> dict:
+        """List all compute environments.
+
+        Args:
+            workspace_id: Tower workspace ID. Defaults to None.
+            status: Compute environment status to filter on.
+                Defaults to None.
+
+        Returns:
+            List of compute environments.
+        """
+        path = "/compute-envs"
+        params = self.generate_params(workspace_id, status=status)
+        response = self.get(path, params=params)
+        return self.unwrap(response, "computeEnvs")
 
     def launch_workflow(
         self,
@@ -229,6 +270,7 @@ class NextflowTowerClient:
         Args:
             launch_info: Description of which workflow to
                 launch and how, including input parameters.
+            workspace_id: Tower workspace ID.
 
         Returns:
             Workflow ID.
