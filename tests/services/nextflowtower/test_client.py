@@ -89,6 +89,35 @@ def test_that_list_compute_envs_works_with_status_filter(client, mocker, get_res
     assert len(response) == 3
 
 
+def test_that_create_label_works(client, mocker, get_response):
+    mock = mocker.patch.object(client, "request_json")
+    mock.return_value = get_response("create_label")
+    response = client.create_label("foo", 98765)
+    mock.assert_called_once()
+    assert response == 12345
+
+
+def test_that_list_labels_works(client, mocker, get_response):
+    full_response = get_response("list_labels")
+    page_1 = {"totalSize": 5, "labels": full_response["labels"][:3]}
+    page_2 = {"totalSize": 5, "labels": full_response["labels"][3:]}
+    mock = mocker.patch.object(client, "request_json")
+    mock.side_effect = [page_1, page_2]
+    response = client.list_labels(98765)
+    assert mock.call_count == 2
+    assert response == full_response["labels"]
+
+
+def test_for_an_error_when_total_size_doesnt_match_items(client, mocker, get_response):
+    full_response = get_response("list_labels")
+    page_1 = {"totalSize": 4, "labels": full_response["labels"][:3]}
+    page_2 = {"totalSize": 4, "labels": full_response["labels"][3:]}
+    mock = mocker.patch.object(client, "request_json")
+    mock.side_effect = [page_1, page_2]
+    with pytest.raises(HTTPError):
+        client.list_labels(98765)
+
+
 def test_that_launch_workflow_works(client, mocker, get_response):
     mock = mocker.patch.object(client, "request_json")
     mock.return_value = get_response("launch_workflow")

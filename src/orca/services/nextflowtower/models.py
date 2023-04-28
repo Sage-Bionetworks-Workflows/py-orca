@@ -44,6 +44,16 @@ class LaunchInfo:
         """
         return datetime.now().isoformat()[:-3] + "Z"
 
+    def fill_in(self, attr: str, value: Any):
+        """Fill in any missing values.
+
+        Args:
+            attr: Attribute name.
+            value: Attribute value.
+        """
+        if getattr(self, attr, None) is None:
+            setattr(self, attr, value)
+
     def to_dict(self) -> dict[str, Any]:
         """Generate JSON representation of a launch specification.
 

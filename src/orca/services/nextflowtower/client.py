@@ -88,43 +88,36 @@ class NextflowTowerClient:
         response.raise_for_status()
         return response.json()
 
-    # def request_paged(self, method: str, path: str, **kwargs) -> list[dict[str, Any]]:
-    #     """Iterate through pages of results for a given request.
+    def request_paged(self, method: str, path: str, **kwargs) -> list[dict[str, Any]]:
+        """Iterate through pages of results for a given request.
 
-    #     See ``TowerClient.request`` for argument definitions.
+        See ``TowerClient.request`` for argument definitions.
 
-    #     Raises:
-    #         HTTPError: If the response doesn't match the expectation
-    #             for a paged endpoint.
+        Raises:
+            HTTPError: If the response doesn't match the expectation
+                for a paged endpoint.
 
-    #     Returns:
-    #         The cumulative list of items from all pages.
-    #     """
-    #     self.update_kwarg(kwargs, "params", "max", 50)
-    #     self.update_kwarg(kwargs, "params", "offset", 0)
+        Returns:
+            The cumulative list of items from all pages.
+        """
+        # Ensure defaults for pagination query parameters
+        self.update_kwarg(kwargs, "params", "max", 50)
+        self.update_kwarg(kwargs, "params", "offset", 0)
 
-    #     num_items = 0
-    #     total_size = 1  # Artificial value for initiating the while-loop
+        # Synchronize `num_items` with the offset
+        num_items = kwargs["params"]["offset"]
 
-    #     all_items = list()
-    #     while num_items < total_size:
-    #         kwargs["params"]["offset"] = num_items
-    #         json = self.request_json(method, path, **kwargs)
+        all_items = list()
+        total_size = float("inf")  # Artificial value for initiating the while-loop
+        while num_items < total_size:
+            kwargs["params"]["offset"] = num_items
+            json = self.request_json(method, path, **kwargs)
+            total_size = json.pop("totalSize")
+            _, items = json.popitem()
+            num_items += len(items)
+            all_items.extend(items)
 
-    #         if "totalSize" not in json:
-    #             message = f"'totalSize' not in response JSON ({json}) as expected."
-    #             raise HTTPError(message)
-    #         total_size = json.pop("totalSize")
-
-    #         if len(json) != 1:
-    #             message = f"Expected one other key aside from 'totalSize' ({json})."
-    #             raise HTTPError(message)
-    #         _, items = json.popitem()
-
-    #         num_items += len(items)
-    #         all_items.extend(items)
-
-    #     return all_items
+        return all_items
 
     def get(self, path: str, **kwargs) -> dict[str, Any]:
         """Send an auth'ed GET request and parse the JSON response.
@@ -134,7 +127,20 @@ class NextflowTowerClient:
         Returns:
             A dictionary from deserializing the JSON response.
         """
-        return self.request_json("GET", path, **kwargs)
+        response = self.request_json("GET", path, **kwargs)
+        if "totalSize" in response:
+            total_size = response.pop("totalSize")
+            key, items = response.popitem()
+            kwargs["params"] = kwargs["params"] or dict()
+            kwargs["params"]["offset"] = len(items)
+            remainder = self.request_paged("GET", path, **kwargs)
+            items.extend(remainder)
+            if len(items) != total_size:
+                message = f"Expected {total_size} items, but got: {items}"
+                raise HTTPError(message)
+            response[key] = items
+            response["totalSize"] = total_size
+        return response
 
     def post(self, path: str, **kwargs) -> dict[str, Any]:
         """Send an auth'ed POST request and parse the JSON response.
@@ -259,6 +265,36 @@ class NextflowTowerClient:
         params = self.generate_params(workspace_id, status=status)
         response = self.get(path, params=params)
         return self.unwrap(response, "computeEnvs")
+
+    def create_label(self, name: str, workspace_id: Optional[int] = None) -> int:
+        """Create a workflow label.
+
+        Args:
+            name: Label name.
+            workspace_id: Tower workspace ID. Defaults to None.
+
+        Returns:
+            Label ID.
+        """
+        path = "/labels"
+        params = self.generate_params(workspace_id)
+        payload = {"name": name, "resource": False}
+        response = self.post(path, params=params, json=payload)
+        return self.unwrap(response, "id")
+
+    def list_labels(self, workspace_id: Optional[int] = None) -> dict:
+        """List all available labels.
+
+        Args:
+            workspace_id: Tower workspace ID. Defaults to None.
+
+        Returns:
+            List of available labels.
+        """
+        path = "/labels"
+        params = self.generate_params(workspace_id)
+        response = self.get(path, params=params)
+        return self.unwrap(response, "labels")
 
     def launch_workflow(
         self,

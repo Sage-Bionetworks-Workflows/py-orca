@@ -41,21 +41,21 @@ get_user_info = {
 get_user_workspaces_and_orgs = {
     "orgsAndWorkspaces": [
         {
-            "orgId": 123456789,
+            "orgId": 12345,
             "orgName": "Foo-Bar",
             "orgLogoUrl": None,
             "workspaceId": None,
             "workspaceName": None,
         },
         {
-            "orgId": 123456789,
+            "orgId": 12345,
             "orgName": "Foo-Bar",
             "orgLogoUrl": None,
             "workspaceId": 54321,
             "workspaceName": "project-1",
         },
         {
-            "orgId": 123456789,
+            "orgId": 12345,
             "orgName": "Foo-Bar",
             "orgLogoUrl": None,
             "workspaceId": 98765,
@@ -147,7 +147,7 @@ get_compute_env: dict = {
         "message": None,
         "primary": None,
         "credentialsId": "S2AIo",
-        "orgId": 123456789,
+        "orgId": 12345,
         "workspaceId": 98765,
         "labels": None,
     }
@@ -197,3 +197,18 @@ list_compute_envs = {
 
 
 launch_workflow = {"workflowId": "23LNH"}
+
+
+create_label = {"id": 12345, "name": "foo", "value": None, "resource": False}
+
+
+list_labels = {
+    "labels": [
+        {"id": 89366, "name": "CostCenter", "value": "12345", "resource": True},
+        {"id": 10567, "name": "Department", "value": "IBC", "resource": True},
+        {"id": 17863, "name": "launched-by-orca", "value": None, "resource": False},
+        {"id": 97881, "name": "ORCA-163", "value": None, "resource": False},
+        {"id": 18898, "name": "Project", "value": "Infrastructure", "resource": True},
+    ],
+    "totalSize": 5,
+}

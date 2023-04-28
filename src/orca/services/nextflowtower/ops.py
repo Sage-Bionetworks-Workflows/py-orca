@@ -7,6 +7,7 @@ from orca.errors import ConfigError
 from orca.services.base.ops import BaseOps
 from orca.services.nextflowtower.client_factory import NextflowTowerClientFactory
 from orca.services.nextflowtower.config import NextflowTowerConfig
+from orca.services.nextflowtower.models import LaunchInfo
 
 
 @dataclass(kw_only=False)
@@ -76,3 +77,29 @@ class NextflowTowerOps(BaseOps):
         envs_info = sorted(envs_info, key=lambda x: x["dateCreated"])
         latest_env = envs_info[-1]
         return latest_env["id"]
+
+    # TODO: Once get_workflow() is available, try to make idempotent
+    def launch_workflow(
+        self,
+        launch_info: LaunchInfo,
+        compute_env_filter: Optional[str] = None,
+    ) -> str:
+        """Launch a workflow using the latest matching compute env.
+
+        Args:
+            launch_info: Workflow launch information.
+            compute_env_filter: Filter for matching compute
+                environments. Default to None.
+
+        Returns:
+            Workflow run ID.
+        """
+        compute_env_id = self.get_latest_compute_env(compute_env_filter)
+        compute_env = self.client.get_compute_env(compute_env_id, self.workspace_id)
+
+        # Update launch_info with compute_env defaults
+        launch_info.fill_in("compute_env_id", compute_env_id)
+        launch_info.fill_in("work_dir", compute_env["config"]["workDir"])
+        launch_info.fill_in("pre_run_script", compute_env["config"]["preRunScript"])
+
+        return self.client.launch_workflow(launch_info, self.workspace_id)
