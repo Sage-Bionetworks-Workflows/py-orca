@@ -2,9 +2,10 @@ import json
 from collections.abc import Collection
 from dataclasses import field
 from datetime import datetime
-from typing import Any, Optional, Self
+from typing import Any, Optional
 
 from pydantic.dataclasses import dataclass
+from typing_extensions import Self
 
 
 @dataclass(kw_only=False)
@@ -50,6 +51,11 @@ class Workspace:
     name: str
     org: Organization
 
+    @property
+    def full_name(self) -> str:
+        """Fully-qualified workspace name (with organization name)."""
+        return f"{self.org.name}/{self.name}".lower()
+
     @classmethod
     def from_response(cls, response: dict[str, Any]) -> Self:
         """Create workspace from API JSON response.
@@ -76,6 +82,7 @@ class LaunchInfo:
     profiles: list[str] = field(default_factory=list)
     user_secrets: list[str] = field(default_factory=list)
     workspace_secrets: list[str] = field(default_factory=list)
+    label_ids: list[int] = field(default_factory=list)
 
     @staticmethod
     def dedup(items: Collection[str]) -> list[str]:
@@ -105,7 +112,7 @@ class LaunchInfo:
             attr: Attribute name.
             value: Attribute value.
         """
-        if getattr(self, attr, None) is None:
+        if not getattr(self, attr, None):
             setattr(self, attr, value)
 
     def to_dict(self) -> dict[str, Any]:
@@ -124,7 +131,7 @@ class LaunchInfo:
                 "headJobCpus": None,
                 "headJobMemoryMb": None,
                 "id": None,
-                "labelIds": [],
+                "labelIds": self.label_ids,
                 "mainScript": None,
                 "optimizationId": None,
                 "paramsText": json.dumps(self.params),
@@ -197,6 +204,7 @@ class ComputeEnv(ComputeEnvSummary):
 
     date_created: datetime
     pre_run_script: str
+    labels: list[Label]
 
     @classmethod
     def from_response(cls, response: dict[str, Any]) -> Self:
@@ -212,5 +220,6 @@ class ComputeEnv(ComputeEnvSummary):
             work_dir=response["config"]["workDir"],
             date_created=datetime.fromisoformat(response["dateCreated"]),
             pre_run_script=response["config"]["preRunScript"],
+            labels=[Label.from_response(label) for label in response["labels"]],
             raw=response,
         )

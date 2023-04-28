@@ -246,7 +246,7 @@ class NextflowTowerClient:
             Compute environment instance.
         """
         path = f"/compute-envs/{compute_env_id}"
-        params = self.generate_params(workspace_id)
+        params = self.generate_params(workspace_id, attributes="labels")
         response = self.get(path, params=params)
         unwrapped = self.unwrap(response, "computeEnv")
         return models.ComputeEnv.from_response(unwrapped)
