@@ -7,6 +7,8 @@ from typing import Any, Optional
 from pydantic.dataclasses import dataclass
 from typing_extensions import Self
 
+from orca.services.nextflowtower.utils import parse_datetime
+
 
 @dataclass(kw_only=False)
 class User:
@@ -209,7 +211,7 @@ class ComputeEnv(ComputeEnvSummary):
             name=response["name"],
             status=response["status"],
             work_dir=response["config"]["workDir"],
-            date_created=datetime.fromisoformat(response["dateCreated"]),
+            date_created=parse_datetime(response["dateCreated"]),
             pre_run_script=response["config"]["preRunScript"],
             labels=[Label.from_json(label) for label in response["labels"]],
             raw=response,

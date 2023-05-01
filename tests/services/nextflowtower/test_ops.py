@@ -1,10 +1,10 @@
 from dataclasses import replace
-from datetime import datetime
 
 import pytest
 
 from orca.errors import ConfigError
 from orca.services.nextflowtower import NextflowTowerConfig, NextflowTowerOps, models
+from orca.services.nextflowtower.utils import parse_datetime
 
 
 def test_that_the_workspace_attribute_is_accessible(ops):
@@ -60,7 +60,7 @@ def test_that_get_latest_compute_env_handles_multiple_envs(mocked_ops, get_respo
     def generate_compute_env(id, date):
         compute_env_response = get_response("get_compute_env")["computeEnv"]
         compute_env = models.ComputeEnv.from_json(compute_env_response)
-        return replace(compute_env, id=id, date_created=datetime.fromisoformat(date))
+        return replace(compute_env, id=id, date_created=parse_datetime(date))
 
     # Generate full compute environments
     mocked_ops.client.get_compute_env.side_effect = [

@@ -82,7 +82,7 @@ class NextflowTowerOps(BaseOps):
         return latest_env.id
 
     def create_label(self, name: str) -> int:
-        """Create (or get existing) label.
+        """Create (or get existing) workflow (non-resource) label.
 
         Args:
             name: Label name.
