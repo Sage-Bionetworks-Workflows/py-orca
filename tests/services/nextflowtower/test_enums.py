@@ -1,4 +1,4 @@
-from orca.services.nextflowtower.models.enums import TaskStatus
+from orca.services.nextflowtower.models import TaskStatus
 
 
 def test_that_TaskStatus_contant_values_are_correct():

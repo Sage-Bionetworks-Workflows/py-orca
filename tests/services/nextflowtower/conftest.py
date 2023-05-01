@@ -34,7 +34,7 @@ def mocked_ops(config, client, mocker):
     yield NextflowTowerOps(config)
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def get_response():
     def _get_response(name: str) -> dict:
         response = getattr(responses, name)
