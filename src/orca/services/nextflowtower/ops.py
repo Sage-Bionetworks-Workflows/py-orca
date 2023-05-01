@@ -1,4 +1,5 @@
 from functools import cached_property
+from typing import cast
 
 from pydantic.dataclasses import dataclass
 
@@ -6,6 +7,7 @@ from orca.errors import ConfigError
 from orca.services.base.ops import BaseOps
 from orca.services.nextflowtower.client_factory import NextflowTowerClientFactory
 from orca.services.nextflowtower.config import NextflowTowerConfig
+from orca.services.nextflowtower.models.enums import TaskStatus
 
 
 @dataclass(kw_only=False)
@@ -55,8 +57,7 @@ class NextflowTowerOps(BaseOps):
         response = self.client.get_workflow(
             workspace_id=self.workspace_id, workflow_id=workflow_id
         )
+        task_status = cast(TaskStatus, response["workflow"]["status"])
+        is_done = task_status in TaskStatus.terminal_states
         # TODO consider switching return value to a namedtuple
-        return (
-            response["workflow"]["status"],
-            response["workflow"]["complete"] is not None,
-        )
+        return task_status, is_done
