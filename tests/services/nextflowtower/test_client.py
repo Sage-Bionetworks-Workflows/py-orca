@@ -61,3 +61,12 @@ def test_that_list_user_workspaces_fails_with_nonstandard_response(client, mocke
     mock.return_value = {"message": "foobar"}
     with pytest.raises(HTTPError):
         client.list_user_workspaces()
+
+
+def test_that_get_workflow_returns_expected_response(client, mocker, get_response):
+    expected = get_response("get_workflow")
+    mock = mocker.patch.object(client, "get")
+    mock.return_value = expected
+    actual = client.get_workflow(workspace_id=98765, workflow_id="123456789")
+    mock.assert_called_once()
+    assert actual == expected

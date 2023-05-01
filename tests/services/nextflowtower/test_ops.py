@@ -33,3 +33,27 @@ def test_for_error_when_the_workspace_id_does_not_exist(ops, mocker, get_respons
     mock.list_user_workspaces.return_value = items_filtered
     with pytest.raises(ValueError):
         ops.workspace_id
+
+
+def test_that_get_workflow_status_returns_expected_tuple_workflow_is_complete(
+    mocker, get_response, mocked_ops
+):
+    response = get_response("get_workflow")
+    mock = mocker.patch.object(mocked_ops, "client")
+    mock.get_workflow.return_value = response
+    result = mocked_ops.get_workflow_status(workflow_id="123456789")
+    mock.get_workflow.assert_called_once()
+    assert result == ("SUCCEEDED", True)
+
+
+def test_that_get_workflow_status_returns_expected_tuple_workflow_is_not_complete(
+    mocked_ops, mocker, get_response
+):
+    response = get_response("get_workflow")
+    response["workflow"]["complete"] = None
+    response["workflow"]["status"] = "SUBMITTED"
+    mock = mocker.patch.object(mocked_ops, "client")
+    mock.get_workflow.return_value = response
+    result = mocked_ops.get_workflow_status(workflow_id="123456789")
+    mock.get_workflow.assert_called_once()
+    assert result == ("SUBMITTED", False)

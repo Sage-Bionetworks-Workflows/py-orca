@@ -23,9 +23,14 @@ def config(patch_os_environ):
 
 
 @pytest.fixture
-def ops(config, client, mocker):
-    mock = mocker.patch.object(NextflowTowerOps, "client")
-    mock.return_value = client
+def ops(config):
+    yield NextflowTowerOps(config)
+
+
+@pytest.fixture
+def mocked_ops(config, client, mocker):
+    mocker.patch.object(NextflowTowerOps, "client", return_value=client)
+    mocker.patch.object(NextflowTowerOps, "workspace_id", return_value=98765)
     yield NextflowTowerOps(config)
 
 
