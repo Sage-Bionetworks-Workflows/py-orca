@@ -96,15 +96,6 @@ class LaunchInfo:
         """
         return list(set(items))
 
-    @staticmethod
-    def get_current_timestamp():
-        """Generate current timestamp using Tower's UTC format.
-
-        Returns:
-            Current timestamp.
-        """
-        return datetime.now().isoformat()[:-3] + "Z"
-
     def fill_in(self, attr: str, value: Any):
         """Fill in any missing values.
 
@@ -126,7 +117,7 @@ class LaunchInfo:
                 "computeEnvId": self.compute_env_id,
                 "configProfiles": self.dedup(self.profiles),
                 "configText": self.nextflow_config,
-                "dateCreated": self.get_current_timestamp(),
+                "dateCreated": None,
                 "entryName": None,
                 "headJobCpus": None,
                 "headJobMemoryMb": None,
