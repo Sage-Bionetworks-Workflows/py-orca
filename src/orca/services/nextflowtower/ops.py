@@ -42,19 +42,6 @@ class NextflowTowerOps(BaseOps):
             raise ConfigError(message)
         return self.config.workspace
 
-    def get_workflow(self, workflow_id: str) -> dict:
-        """Gets available information about a workflow run
-
-        Attributes:
-            workflow_id (str): The ID number for a workflow run to get information about
-
-        Returns:
-            response (dict): Dictionary containing information about the workflow run
-        """
-        path = f"/workflow/{workflow_id}"
-        response = self.client.get(path=path, params={"workspaceId": self.workspace_id})
-        return response
-
     def get_workflow_status(self, workflow_id: str) -> tuple:
         """Gets status of workflow run
 
@@ -65,8 +52,11 @@ class NextflowTowerOps(BaseOps):
             tuple: Tuple containing 1. status (str) and
             2. Whether the workflow is done (boolean)
         """
-        response = self.get_workflow(workflow_id=workflow_id)
+        response = self.client.get_workflow(
+            workspace_id=self.workspace_id, workflow_id=workflow_id
+        )
+        # TODO consider switching return value to a namedtuple
         return (
             response["workflow"]["status"],
-            bool(response["workflow"]["complete"]),
+            response["workflow"]["complete"] is not None,
         )
