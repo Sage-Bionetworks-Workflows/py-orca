@@ -86,7 +86,7 @@ class NextflowTowerClient:
         response.raise_for_status()
         return response.json()
 
-    def request_paged(self, method: str, path: str, **kwargs) -> list[dict[str, Any]]:
+    def request_paged(self, method: str, path: str, **kwargs) -> dict[str, Any]:
         """Iterate through pages of results for a given request.
 
         See ``TowerClient.request`` for argument definitions.
@@ -102,20 +102,24 @@ class NextflowTowerClient:
         self.update_kwarg(kwargs, "params", "max", 50)
         self.update_kwarg(kwargs, "params", "offset", 0)
 
-        # Synchronize `num_items` with the offset
-        num_items = kwargs["params"]["offset"]
-
+        num_items = 0
         all_items = list()
+        key_name = "items"  # Setting a default value
         total_size = float("inf")  # Artificial value for initiating the while-loop
         while num_items < total_size:
             kwargs["params"]["offset"] = num_items
             json = self.request_json(method, path, **kwargs)
             total_size = json.pop("totalSize")
-            _, items = json.popitem()
+            key_name, items = json.popitem()
             num_items += len(items)
             all_items.extend(items)
 
-        return all_items
+        if len(all_items) != total_size:
+            message = f"Expected {total_size} items, but got: {all_items}"
+            raise HTTPError(message)
+
+        json = {"totalSize": total_size, key_name: all_items}
+        return json
 
     def get(self, path: str, **kwargs) -> dict[str, Any]:
         """Send an auth'ed GET request and parse the JSON response.
@@ -127,17 +131,7 @@ class NextflowTowerClient:
         """
         json = self.request_json("GET", path, **kwargs)
         if "totalSize" in json:
-            total_size = json.pop("totalSize")
-            key, items = json.popitem()
-            kwargs["params"] = kwargs["params"] or dict()
-            kwargs["params"]["offset"] = len(items)
-            remainder = self.request_paged("GET", path, **kwargs)
-            items.extend(remainder)
-            if len(items) != total_size:
-                message = f"Expected {total_size} items, but got: {items}"
-                raise HTTPError(message)
-            json[key] = items
-            json["totalSize"] = total_size
+            json = self.request_paged("GET", path, **kwargs)
         return json
 
     def post(self, path: str, **kwargs) -> dict[str, Any]:

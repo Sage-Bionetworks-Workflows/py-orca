@@ -102,11 +102,11 @@ def test_that_list_labels_works(client, mocker, get_response):
     page_1 = {"totalSize": 5, "labels": full_response["labels"][:3]}
     page_2 = {"totalSize": 5, "labels": full_response["labels"][3:]}
     mock = mocker.patch.object(client, "request_json")
-    mock.side_effect = [page_1, page_2]
-    response = client.list_labels(98765)
+    mock.side_effect = [page_1, page_1, page_2]  # First request is repeated
+    actual = client.list_labels(98765)
     expected = [models.Label.from_json(item) for item in full_response["labels"]]
-    assert mock.call_count == 2
-    assert response == expected
+    assert mock.call_count == 3
+    assert actual == expected
 
 
 def test_for_an_error_when_total_size_doesnt_match_items(client, mocker, get_response):
@@ -114,7 +114,7 @@ def test_for_an_error_when_total_size_doesnt_match_items(client, mocker, get_res
     page_1 = {"totalSize": 4, "labels": full_response["labels"][:3]}
     page_2 = {"totalSize": 4, "labels": full_response["labels"][3:]}
     mock = mocker.patch.object(client, "request_json")
-    mock.side_effect = [page_1, page_2]
+    mock.side_effect = [page_1, page_1, page_2]  # First request is repeated
     with pytest.raises(HTTPError):
         client.list_labels(98765)
 
