@@ -23,7 +23,7 @@ def test_that_the_workspace_id_attribute_is_accessible(
 ):
     response = get_response("get_user_workspaces_and_orgs")["orgsAndWorkspaces"]
     workspaces_json = [item for item in response if item["workspaceId"]]
-    workspaces = [models.Workspace.from_response(item) for item in workspaces_json]
+    workspaces = [models.Workspace.from_json(item) for item in workspaces_json]
 
     mock = mocker.patch.object(NextflowTowerOps, "client", return_value=client)
     mock.list_user_workspaces.return_value = workspaces
@@ -38,7 +38,7 @@ def test_for_error_when_the_workspace_id_does_not_exist(
 ):
     response = get_response("get_user_workspaces_and_orgs")["orgsAndWorkspaces"]
     workspaces_json = [item for item in response if item["workspaceId"]]
-    workspaces = [models.Workspace.from_response(item) for item in workspaces_json]
+    workspaces = [models.Workspace.from_json(item) for item in workspaces_json]
 
     mock = mocker.patch.object(NextflowTowerOps, "client", return_value=client)
     mock.list_user_workspaces.return_value = workspaces
@@ -53,13 +53,13 @@ def test_that_get_latest_compute_env_handles_multiple_envs(mocked_ops, get_respo
     # Patch list_compute_envs() to return a list of ComputeEnvSummary objects
     # This should result in two matching compute environments
     response = get_response("list_compute_envs")
-    summaries = map(models.ComputeEnvSummary.from_response, response["computeEnvs"])
+    summaries = map(models.ComputeEnvSummary.from_json, response["computeEnvs"])
     mocked_ops.client.list_compute_envs.return_value = list(summaries)
 
     # Create function for generating compute environments
     def generate_compute_env(id, date):
         compute_env_response = get_response("get_compute_env")["computeEnv"]
-        compute_env = models.ComputeEnv.from_response(compute_env_response)
+        compute_env = models.ComputeEnv.from_json(compute_env_response)
         return replace(compute_env, id=id, date_created=datetime.fromisoformat(date))
 
     # Generate full compute environments
@@ -77,7 +77,7 @@ def test_that_get_latest_compute_env_handles_single_env(mocked_ops, get_response
     # This should result in one matching compute environment
     response = get_response("list_compute_envs")
     del response["computeEnvs"][2]
-    summaries = map(models.ComputeEnvSummary.from_response, response["computeEnvs"])
+    summaries = map(models.ComputeEnvSummary.from_json, response["computeEnvs"])
     mocked_ops.client.list_compute_envs.return_value = list(summaries)
 
     result = mocked_ops.get_latest_compute_env("ondemand")
@@ -92,7 +92,7 @@ def test_for_an_error_when_get_latest_compute_env_finds_no_env(mocked_ops):
 
 def test_that_create_label_doesnt_create_duplicates(mocked_ops, get_response):
     labels_json = get_response("list_labels")["labels"]
-    labels = [models.Label.from_response(item) for item in labels_json]
+    labels = [models.Label.from_json(item) for item in labels_json]
     mocked_ops.client.list_labels.return_value = labels
 
     mocked_ops.create_label("launched-by-orca")
@@ -101,7 +101,7 @@ def test_that_create_label_doesnt_create_duplicates(mocked_ops, get_response):
 
 def test_that_create_label_creates_missing_labels(mocked_ops, get_response):
     labels_json = get_response("list_labels")["labels"]
-    labels = [models.Label.from_response(item) for item in labels_json]
+    labels = [models.Label.from_json(item) for item in labels_json]
     mocked_ops.client.list_labels.return_value = labels
 
     mocked_ops.create_label("something-missing")
@@ -110,7 +110,7 @@ def test_that_create_label_creates_missing_labels(mocked_ops, get_response):
 
 def test_that_create_label_ignores_resource_labels(mocked_ops, get_response):
     labels_json = get_response("list_labels")["labels"]
-    labels = [models.Label.from_response(item) for item in labels_json]
+    labels = [models.Label.from_json(item) for item in labels_json]
     mocked_ops.client.list_labels.return_value = labels
 
     mocked_ops.create_label("CostCenter")  # Existing resource label
@@ -130,7 +130,7 @@ def test_that_launch_workflow_works(mocked_ops, get_response, mocker):
     mocker.patch.object(mocked_ops, "get_latest_compute_env")
 
     compute_env_response = get_response("get_compute_env")["computeEnv"]
-    compute_env = models.ComputeEnv.from_response(compute_env_response)
+    compute_env = models.ComputeEnv.from_json(compute_env_response)
     mocked_ops.client.get_compute_env.return_value = compute_env
 
     mocked_ops.launch_workflow(launch_info, "ondemand")

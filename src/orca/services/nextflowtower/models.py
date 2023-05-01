@@ -17,7 +17,7 @@ class User:
     email: str
 
     @classmethod
-    def from_response(cls, response: dict[str, Any]) -> Self:
+    def from_json(cls, response: dict[str, Any]) -> Self:
         """Create user from API JSON response.
 
         Returns:
@@ -34,7 +34,7 @@ class Organization:
     name: str
 
     @classmethod
-    def from_response(cls, response: dict[str, Any]) -> Self:
+    def from_json(cls, response: dict[str, Any]) -> Self:
         """Create organization from API JSON response.
 
         Returns:
@@ -57,13 +57,13 @@ class Workspace:
         return f"{self.org.name}/{self.name}".lower()
 
     @classmethod
-    def from_response(cls, response: dict[str, Any]) -> Self:
+    def from_json(cls, response: dict[str, Any]) -> Self:
         """Create workspace from API JSON response.
 
         Returns:
             Workspace instance.
         """
-        org = Organization.from_response(response)
+        org = Organization.from_json(response)
         return cls(response["workspaceId"], response["workspaceName"], org)
 
 
@@ -163,7 +163,7 @@ class Label:
     resource: bool
 
     @classmethod
-    def from_response(cls, response: dict[str, Any]) -> Self:
+    def from_json(cls, response: dict[str, Any]) -> Self:
         """Create label from API JSON response.
 
         Returns:
@@ -183,7 +183,7 @@ class ComputeEnvSummary:
     raw: dict
 
     @classmethod
-    def from_response(cls, response: dict[str, Any]) -> Self:
+    def from_json(cls, response: dict[str, Any]) -> Self:
         """Create compute environment from API JSON response.
 
         Returns:
@@ -207,7 +207,7 @@ class ComputeEnv(ComputeEnvSummary):
     labels: list[Label]
 
     @classmethod
-    def from_response(cls, response: dict[str, Any]) -> Self:
+    def from_json(cls, response: dict[str, Any]) -> Self:
         """Create compute environment from API JSON response.
 
         Returns:
@@ -220,6 +220,6 @@ class ComputeEnv(ComputeEnvSummary):
             work_dir=response["config"]["workDir"],
             date_created=datetime.fromisoformat(response["dateCreated"]),
             pre_run_script=response["config"]["preRunScript"],
-            labels=[Label.from_response(label) for label in response["labels"]],
+            labels=[Label.from_json(label) for label in response["labels"]],
             raw=response,
         )

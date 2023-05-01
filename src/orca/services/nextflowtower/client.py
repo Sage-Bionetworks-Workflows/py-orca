@@ -125,10 +125,10 @@ class NextflowTowerClient:
         Returns:
             A dictionary from deserializing the JSON response.
         """
-        response = self.request_json("GET", path, **kwargs)
-        if "totalSize" in response:
-            total_size = response.pop("totalSize")
-            key, items = response.popitem()
+        json = self.request_json("GET", path, **kwargs)
+        if "totalSize" in json:
+            total_size = json.pop("totalSize")
+            key, items = json.popitem()
             kwargs["params"] = kwargs["params"] or dict()
             kwargs["params"]["offset"] = len(items)
             remainder = self.request_paged("GET", path, **kwargs)
@@ -136,9 +136,9 @@ class NextflowTowerClient:
             if len(items) != total_size:
                 message = f"Expected {total_size} items, but got: {items}"
                 raise HTTPError(message)
-            response[key] = items
-            response["totalSize"] = total_size
-        return response
+            json[key] = items
+            json["totalSize"] = total_size
+        return json
 
     def post(self, path: str, **kwargs) -> dict[str, Any]:
         """Send an auth'ed POST request and parse the JSON response.
@@ -150,20 +150,20 @@ class NextflowTowerClient:
         """
         return self.request_json("POST", path, **kwargs)
 
-    def unwrap(self, response: dict[str, Any], key: str) -> Any:
+    def unwrap(self, json: dict[str, Any], key: str) -> Any:
         """Unwrap nested key in JSON response.
 
         Args:
-            response: Raw JSON response.
+            json: Raw JSON response.
             key: Top-level key.
 
         Returns:
-            Unnested response.
+            Unnested JSON response.
         """
-        if key not in response:
-            message = f"Expecting '{key}' key in response ({response})."
+        if key not in json:
+            message = f"Expecting '{key}' key in JSON response ({json})."
             raise HTTPError(message)
-        return response[key]
+        return json[key]
 
     def get_user_info(self) -> models.User:
         """Describe current user.
@@ -172,9 +172,9 @@ class NextflowTowerClient:
             Current user.
         """
         path = "/user-info"
-        response = self.get(path)
-        unwrapped = self.unwrap(response, "user")
-        return models.User.from_response(unwrapped)
+        json = self.get(path)
+        unwrapped = self.unwrap(json, "user")
+        return models.User.from_json(unwrapped)
 
     def list_user_workspaces_and_orgs(
         self,
@@ -186,15 +186,15 @@ class NextflowTowerClient:
             List of workspaces and organizations.
         """
         path = f"/user/{user_id}/workspaces"
-        response = self.get(path)
-        items = self.unwrap(response, "orgsAndWorkspaces")
+        json = self.get(path)
+        items = self.unwrap(json, "orgsAndWorkspaces")
         objects: list[models.Organization | models.Workspace] = list()
         for item in items:
             if item["workspaceId"]:
-                workspace = models.Workspace.from_response(item)
+                workspace = models.Workspace.from_json(item)
                 objects.append(workspace)
             else:
-                org = models.Organization.from_response(item)
+                org = models.Organization.from_json(item)
                 objects.append(org)
         return objects
 
@@ -247,9 +247,9 @@ class NextflowTowerClient:
         """
         path = f"/compute-envs/{compute_env_id}"
         params = self.generate_params(workspace_id, attributes="labels")
-        response = self.get(path, params=params)
-        unwrapped = self.unwrap(response, "computeEnv")
-        return models.ComputeEnv.from_response(unwrapped)
+        json = self.get(path, params=params)
+        unwrapped = self.unwrap(json, "computeEnv")
+        return models.ComputeEnv.from_json(unwrapped)
 
     def list_compute_envs(
         self,
@@ -268,9 +268,9 @@ class NextflowTowerClient:
         """
         path = "/compute-envs"
         params = self.generate_params(workspace_id, status=status)
-        response = self.get(path, params=params)
-        items = self.unwrap(response, "computeEnvs")
-        return [models.ComputeEnvSummary.from_response(item) for item in items]
+        json = self.get(path, params=params)
+        items = self.unwrap(json, "computeEnvs")
+        return [models.ComputeEnvSummary.from_json(item) for item in items]
 
     def create_label(
         self,
@@ -289,8 +289,8 @@ class NextflowTowerClient:
         path = "/labels"
         params = self.generate_params(workspace_id)
         payload = {"name": name, "resource": False}
-        response = self.post(path, params=params, json=payload)
-        return models.Label.from_response(response)
+        json = self.post(path, params=params, json=payload)
+        return models.Label.from_json(json)
 
     def list_labels(self, workspace_id: Optional[int] = None) -> list[models.Label]:
         """List all available labels.
@@ -303,9 +303,9 @@ class NextflowTowerClient:
         """
         path = "/labels"
         params = self.generate_params(workspace_id)
-        response = self.get(path, params=params)
-        items = self.unwrap(response, "labels")
-        return [models.Label.from_response(item) for item in items]
+        json = self.get(path, params=params)
+        items = self.unwrap(json, "labels")
+        return [models.Label.from_json(item) for item in items]
 
     def launch_workflow(
         self,
@@ -325,5 +325,5 @@ class NextflowTowerClient:
         path = "/workflow/launch"
         params = self.generate_params(workspace_id)
         payload = launch_info.to_dict()
-        response = self.post(path, params=params, json=payload)
-        return self.unwrap(response, "workflowId")
+        json = self.post(path, params=params, json=payload)
+        return self.unwrap(json, "workflowId")

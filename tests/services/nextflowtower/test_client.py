@@ -38,7 +38,7 @@ def test_that_get_user_info_works(client, mocker, get_response):
     mock.return_value = expected
     actual = client.get_user_info()
     mock.assert_called_once()
-    assert actual == models.User.from_response(expected["user"])
+    assert actual == models.User.from_json(expected["user"])
 
 
 def test_that_get_user_info_fails_with_nonstandard_response(client, mocker):
@@ -104,7 +104,7 @@ def test_that_list_labels_works(client, mocker, get_response):
     mock = mocker.patch.object(client, "request_json")
     mock.side_effect = [page_1, page_2]
     response = client.list_labels(98765)
-    expected = [models.Label.from_response(item) for item in full_response["labels"]]
+    expected = [models.Label.from_json(item) for item in full_response["labels"]]
     assert mock.call_count == 2
     assert response == expected
 
