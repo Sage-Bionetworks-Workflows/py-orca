@@ -44,7 +44,7 @@ class NextflowTowerOps(BaseOps):
             raise ConfigError(message)
         return self.config.workspace
 
-    def get_workflow_status(self, workflow_id: str) -> tuple:
+    def get_workflow_status(self, workflow_id: str) -> tuple[TaskStatus, bool]:
         """Gets status of workflow run
 
         Args:
@@ -58,6 +58,6 @@ class NextflowTowerOps(BaseOps):
             workspace_id=self.workspace_id, workflow_id=workflow_id
         )
         task_status = cast(TaskStatus, response["workflow"]["status"])
-        is_done = task_status in TaskStatus.terminal_states
+        is_done = task_status in TaskStatus.terminal_states.value
         # TODO consider switching return value to a namedtuple
         return task_status, is_done
