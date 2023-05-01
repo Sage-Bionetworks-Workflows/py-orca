@@ -2,12 +2,30 @@ import json
 from collections.abc import Collection
 from dataclasses import field
 from datetime import datetime
+from enum import Enum
 from typing import Any, Optional
 
 from pydantic.dataclasses import dataclass
 from typing_extensions import Self
 
 from orca.services.nextflowtower.utils import parse_datetime
+
+
+class TaskStatus(Enum):
+    """enum containing all possible status values for
+    Nextflow Tower runs. terminal_states set which
+    statuses result in a run being determined to be
+    "complete"
+    """
+
+    SUBMITTED = "SUBMITTED"
+    RUNNING = "RUNNING"
+    SUCCEEDED = "SUCCEEDED"
+    FAILED = "FAILED"
+    CANCELLED = "CANCELLED"
+    UNKNOWN = "UNKNOWN"
+
+    terminal_states = [SUCCEEDED, FAILED, CANCELLED, UNKNOWN]
 
 
 @dataclass(kw_only=False)

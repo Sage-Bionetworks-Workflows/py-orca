@@ -321,3 +321,19 @@ class NextflowTowerClient:
         payload = launch_info.to_dict()
         json = self.post(path, params=params, json=payload)
         return self.unwrap(json, "workflowId")
+
+    def get_workflow(self, workspace_id: int, workflow_id: str) -> dict:
+        """Gets available information about a workflow run
+
+        Attributes:
+            workspace_id (int): The ID number of the workspace the workflow
+            exists within.
+            workflow_id (str): The ID number for a workflow run to get
+            information about.
+
+        Returns:
+            response (dict): Dictionary containing information about the workflow run
+        """
+        path = f"/workflow/{workflow_id}"
+        json = self.get(path=path, params={"workspaceId": workspace_id})
+        return json

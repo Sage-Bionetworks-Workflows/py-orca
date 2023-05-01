@@ -1,5 +1,5 @@
 from functools import cached_property
-from typing import ClassVar, Optional
+from typing import ClassVar, Optional, cast
 
 from pydantic.dataclasses import dataclass
 
@@ -8,7 +8,7 @@ from orca.services.base.ops import BaseOps
 from orca.services.nextflowtower.client import NextflowTowerClient
 from orca.services.nextflowtower.client_factory import NextflowTowerClientFactory
 from orca.services.nextflowtower.config import NextflowTowerConfig
-from orca.services.nextflowtower.models import LaunchInfo
+from orca.services.nextflowtower.models import LaunchInfo, TaskStatus
 
 
 @dataclass(kw_only=False)
@@ -130,3 +130,21 @@ class NextflowTowerOps(BaseOps):
         launch_info.fill_in("label_ids", label_ids)
 
         return self.client.launch_workflow(launch_info, self.workspace_id)
+
+    def get_workflow_status(self, workflow_id: str) -> tuple[TaskStatus, bool]:
+        """Gets status of workflow run
+
+        Args:
+            workflow_id (str): The ID number for a workflow run to get information about
+
+        Returns:
+            tuple: Tuple containing 1. status (str) and
+            2. Whether the workflow is done (boolean)
+        """
+        response = self.client.get_workflow(
+            workspace_id=self.workspace_id, workflow_id=workflow_id
+        )
+        task_status = cast(TaskStatus, response["workflow"]["status"])
+        is_done = task_status in TaskStatus.terminal_states.value
+        # TODO: Consider switching return value to a namedtuple
+        return task_status, is_done

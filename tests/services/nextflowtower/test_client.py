@@ -130,3 +130,12 @@ def test_that_launch_workflow_works(client, mocker, get_response):
     )
     client.launch_workflow(launch_spec)
     mock.assert_called_once()
+
+
+def test_that_get_workflow_returns_expected_response(client, mocker, get_response):
+    expected = get_response("get_workflow")
+    mock = mocker.patch.object(client, "get")
+    mock.return_value = expected
+    actual = client.get_workflow(workspace_id=98765, workflow_id="123456789")
+    mock.assert_called_once()
+    assert actual == expected
