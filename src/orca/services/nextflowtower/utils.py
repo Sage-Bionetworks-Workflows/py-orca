@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 def parse_datetime(text: str) -> datetime:
@@ -10,4 +10,6 @@ def parse_datetime(text: str) -> datetime:
     Returns:
         Datetime object.
     """
-    return datetime.strptime(text, "%Y-%m-%dT%H:%M:%SZ")
+    parsed = datetime.strptime(text, "%Y-%m-%dT%H:%M:%SZ")
+    parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed
