@@ -189,8 +189,10 @@ class NextflowTowerClient:
         """Gets available information about a workflow run
 
         Attributes:
-            workspace_id (int): The ID number of the workspace the workflow exists within.
-            workflow_id (str): The ID number for a workflow run to get information about.
+            workspace_id (int): The ID number of the workspace the workflow
+            exists within.
+            workflow_id (str): The ID number for a workflow run to get
+            information about.
 
         Returns:
             response (dict): Dictionary containing information about the workflow run
