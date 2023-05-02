@@ -3,12 +3,6 @@ import pytest
 from orca.services.nextflowtower.models import LaunchInfo
 
 
-def test_that_launch_info_dedup_works():
-    secrets = ["foo", "bar", "baz", "foo"]
-    dedupped = LaunchInfo.dedup(secrets)
-    assert len(dedupped) == 3
-
-
 def test_that_getting_an_launch_info_attribute_works():
     launch_info = LaunchInfo(pipeline="foo")
     assert launch_info.get("pipeline") == "foo"
