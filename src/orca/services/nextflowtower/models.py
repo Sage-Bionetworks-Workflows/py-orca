@@ -1,5 +1,4 @@
 import json
-from collections.abc import Collection
 from dataclasses import field
 from datetime import datetime
 from enum import Enum
@@ -8,7 +7,7 @@ from typing import Any, Iterable, Optional
 from pydantic.dataclasses import dataclass
 from typing_extensions import Self
 
-from orca.services.nextflowtower.utils import parse_datetime
+from orca.services.nextflowtower.utils import dedup, parse_datetime
 
 
 class TaskStatus(Enum):
@@ -104,18 +103,6 @@ class LaunchInfo:
     workspace_secrets: list[str] = field(default_factory=list)
     label_ids: list[int] = field(default_factory=list)
 
-    @staticmethod
-    def dedup(items: Collection[str]) -> list[str]:
-        """Deduplicate items in a collection.
-
-        Args:
-            items: Collection of items.
-
-        Returns:
-            Deduplicated collection or None.
-        """
-        return list(set(items))
-
     def fill_in(self, attr: str, value: Any):
         """Fill in any missing values.
 
@@ -138,6 +125,7 @@ class LaunchInfo:
             message = f"Attribute '{attr}' is not a list and cannot be extended."
             raise ValueError(message)
         updated_values = current_values + list(values)
+        updated_values = dedup(updated_values)
         setattr(self, attr, updated_values)
 
     def get(self, name: str) -> Any:
@@ -163,14 +151,14 @@ class LaunchInfo:
         output = {
             "launch": {
                 "computeEnvId": self.get("compute_env_id"),
-                "configProfiles": self.dedup(self.profiles),
+                "configProfiles": dedup(self.profiles),
                 "configText": self.nextflow_config,
                 "dateCreated": None,
                 "entryName": None,
                 "headJobCpus": None,
                 "headJobMemoryMb": None,
                 "id": None,
-                "labelIds": self.label_ids,
+                "labelIds": dedup(self.label_ids),
                 "mainScript": None,
                 "optimizationId": None,
                 "paramsText": json.dumps(self.params),
@@ -184,9 +172,9 @@ class LaunchInfo:
                 "schemaName": None,
                 "stubRun": False,
                 "towerConfig": None,
-                "userSecrets": self.dedup(self.user_secrets),
+                "userSecrets": dedup(self.user_secrets),
                 "workDir": self.get("work_dir"),
-                "workspaceSecrets": self.dedup(self.workspace_secrets),
+                "workspaceSecrets": dedup(self.workspace_secrets),
             }
         }
         return output
