@@ -91,9 +91,9 @@ class Workspace:
 class LaunchInfo:
     """Nextflow Tower workflow launch specification."""
 
-    compute_env_id: str
-    pipeline: str
-    work_dir: str
+    pipeline: Optional[str] = None
+    compute_env_id: Optional[str] = None
+    work_dir: Optional[str] = None
     revision: Optional[str] = None
     params: Optional[dict] = None
     nextflow_config: Optional[str] = None
@@ -126,6 +126,20 @@ class LaunchInfo:
         if not getattr(self, attr, None):
             setattr(self, attr, value)
 
+    def get(self, name: str) -> Any:
+        """Retrieve attribute value, which cannot be None.
+
+        Args:
+            name: Atribute name.
+
+        Returns:
+            Attribute value (not None).
+        """
+        if getattr(self, name, None) is None:
+            message = f"Attribute '{name}' must be set (not None) by this point."
+            raise ValueError(message)
+        return getattr(self, name)
+
     def to_dict(self) -> dict[str, Any]:
         """Generate JSON representation of a launch specification.
 
@@ -134,7 +148,7 @@ class LaunchInfo:
         """
         output = {
             "launch": {
-                "computeEnvId": self.compute_env_id,
+                "computeEnvId": self.get("compute_env_id"),
                 "configProfiles": self.dedup(self.profiles),
                 "configText": self.nextflow_config,
                 "dateCreated": None,
@@ -146,7 +160,7 @@ class LaunchInfo:
                 "mainScript": None,
                 "optimizationId": None,
                 "paramsText": json.dumps(self.params),
-                "pipeline": self.pipeline,
+                "pipeline": self.get("pipeline"),
                 "postRunScript": None,
                 "preRunScript": self.pre_run_script,
                 "pullLatest": False,
@@ -157,7 +171,7 @@ class LaunchInfo:
                 "stubRun": False,
                 "towerConfig": None,
                 "userSecrets": self.dedup(self.user_secrets),
-                "workDir": self.work_dir,
+                "workDir": self.get("work_dir"),
                 "workspaceSecrets": self.dedup(self.workspace_secrets),
             }
         }
