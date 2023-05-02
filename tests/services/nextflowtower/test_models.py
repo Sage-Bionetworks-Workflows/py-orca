@@ -32,3 +32,9 @@ def test_that_launch_info_list_attribute_can_be_added_in():
     assert launch_info.label_ids == [1, 2, 3]
     launch_info.add_in("label_ids", [4, 5, 6])
     assert launch_info.label_ids == [1, 2, 3, 4, 5, 6]
+
+
+def test_for_an_error_when_adding_in_with_nonlist_launch_info_attribute():
+    launch_info = LaunchInfo(pipeline="foo")
+    with pytest.raises(ValueError):
+        launch_info.add_in("pipeline", [4, 5, 6])
