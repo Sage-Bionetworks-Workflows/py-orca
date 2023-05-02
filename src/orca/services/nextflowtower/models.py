@@ -3,7 +3,7 @@ from collections.abc import Collection
 from dataclasses import field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any, Iterable, Optional
 
 from pydantic.dataclasses import dataclass
 from typing_extensions import Self
@@ -125,6 +125,20 @@ class LaunchInfo:
         """
         if not getattr(self, attr, None):
             setattr(self, attr, value)
+
+    def add_in(self, attr: str, values: Iterable[Any]):
+        """Add values to a list attribute.
+
+        Args:
+            attr: Attribute name.
+            values: New attribute values.
+        """
+        current_values = getattr(self, attr)
+        if not isinstance(current_values, list):
+            message = f"Attribute '{attr}' is not a list and cannot be extended."
+            raise ValueError(message)
+        updated_values = current_values + list(values)
+        setattr(self, attr, updated_values)
 
     def get(self, name: str) -> Any:
         """Retrieve attribute value, which cannot be None.
