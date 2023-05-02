@@ -39,12 +39,10 @@ def test_that_a_valid_client_can_be_constructed_and_tested(client):
 def test_that_a_workflow_can_be_launched(ops):
     scratch_bucket = "s3://orca-service-test-project-tower-scratch/"
     launch_info = models.LaunchInfo(
-        compute_env_id="5ykJFs33AE3d3AgThavz3b",
         pipeline="nf-core/rnaseq",
         revision="3.11.2",
         profiles=["test"],
         params={"outdir": f"{scratch_bucket}/2days/launch_test"},
-        work_dir=f"{scratch_bucket}/work",
     )
     workflow_id = ops.launch_workflow(launch_info, "ondemand")
     assert workflow_id

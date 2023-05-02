@@ -127,10 +127,11 @@ class NextflowTowerOps(BaseOps):
         launch_info.fill_in("compute_env_id", compute_env_id)
         launch_info.fill_in("work_dir", compute_env.work_dir)
         launch_info.fill_in("pre_run_script", compute_env.pre_run_script)
-        launch_info.fill_in("label_ids", label_ids)
+        launch_info.add_in("label_ids", label_ids)
 
         return self.client.launch_workflow(launch_info, self.workspace_id)
 
+    # TODO: Consider switching return value to a namedtuple
     def get_workflow_status(self, workflow_id: str) -> tuple[TaskStatus, bool]:
         """Gets status of workflow run
 
@@ -146,5 +147,4 @@ class NextflowTowerOps(BaseOps):
         )
         task_status = cast(TaskStatus, response["workflow"]["status"])
         is_done = task_status in TaskStatus.terminal_states.value
-        # TODO: Consider switching return value to a namedtuple
         return task_status, is_done

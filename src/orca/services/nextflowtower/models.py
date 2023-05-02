@@ -1,14 +1,13 @@
 import json
-from collections.abc import Collection
 from dataclasses import field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any, Iterable, Optional
 
 from pydantic.dataclasses import dataclass
 from typing_extensions import Self
 
-from orca.services.nextflowtower.utils import parse_datetime
+from orca.services.nextflowtower.utils import dedup, parse_datetime
 
 
 class TaskStatus(Enum):
@@ -91,9 +90,9 @@ class Workspace:
 class LaunchInfo:
     """Nextflow Tower workflow launch specification."""
 
-    compute_env_id: str
-    pipeline: str
-    work_dir: str
+    pipeline: Optional[str] = None
+    compute_env_id: Optional[str] = None
+    work_dir: Optional[str] = None
     revision: Optional[str] = None
     params: Optional[dict] = None
     nextflow_config: Optional[str] = None
@@ -103,18 +102,6 @@ class LaunchInfo:
     user_secrets: list[str] = field(default_factory=list)
     workspace_secrets: list[str] = field(default_factory=list)
     label_ids: list[int] = field(default_factory=list)
-
-    @staticmethod
-    def dedup(items: Collection[str]) -> list[str]:
-        """Deduplicate items in a collection.
-
-        Args:
-            items: Collection of items.
-
-        Returns:
-            Deduplicated collection or None.
-        """
-        return list(set(items))
 
     def fill_in(self, attr: str, value: Any):
         """Fill in any missing values.
@@ -126,6 +113,35 @@ class LaunchInfo:
         if not getattr(self, attr, None):
             setattr(self, attr, value)
 
+    def add_in(self, attr: str, values: Iterable[Any]):
+        """Add values to a list attribute.
+
+        Args:
+            attr: Attribute name.
+            values: New attribute values.
+        """
+        current_values = getattr(self, attr)
+        if not isinstance(current_values, list):
+            message = f"Attribute '{attr}' is not a list and cannot be extended."
+            raise ValueError(message)
+        updated_values = current_values + list(values)
+        updated_values = dedup(updated_values)
+        setattr(self, attr, updated_values)
+
+    def get(self, name: str) -> Any:
+        """Retrieve attribute value, which cannot be None.
+
+        Args:
+            name: Atribute name.
+
+        Returns:
+            Attribute value (not None).
+        """
+        if getattr(self, name, None) is None:
+            message = f"Attribute '{name}' must be set (not None) by this point."
+            raise ValueError(message)
+        return getattr(self, name)
+
     def to_dict(self) -> dict[str, Any]:
         """Generate JSON representation of a launch specification.
 
@@ -134,19 +150,19 @@ class LaunchInfo:
         """
         output = {
             "launch": {
-                "computeEnvId": self.compute_env_id,
-                "configProfiles": self.dedup(self.profiles),
+                "computeEnvId": self.get("compute_env_id"),
+                "configProfiles": dedup(self.profiles),
                 "configText": self.nextflow_config,
                 "dateCreated": None,
                 "entryName": None,
                 "headJobCpus": None,
                 "headJobMemoryMb": None,
                 "id": None,
-                "labelIds": self.label_ids,
+                "labelIds": dedup(self.label_ids),
                 "mainScript": None,
                 "optimizationId": None,
                 "paramsText": json.dumps(self.params),
-                "pipeline": self.pipeline,
+                "pipeline": self.get("pipeline"),
                 "postRunScript": None,
                 "preRunScript": self.pre_run_script,
                 "pullLatest": False,
@@ -156,9 +172,9 @@ class LaunchInfo:
                 "schemaName": None,
                 "stubRun": False,
                 "towerConfig": None,
-                "userSecrets": self.dedup(self.user_secrets),
-                "workDir": self.work_dir,
-                "workspaceSecrets": self.dedup(self.workspace_secrets),
+                "userSecrets": dedup(self.user_secrets),
+                "workDir": self.get("work_dir"),
+                "workspaceSecrets": dedup(self.workspace_secrets),
             }
         }
         return output
