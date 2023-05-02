@@ -4,6 +4,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Iterable, Optional
 
+from pydantic import root_validator
 from pydantic.dataclasses import dataclass
 from typing_extensions import Self
 
@@ -102,6 +103,27 @@ class LaunchInfo:
     user_secrets: list[str] = field(default_factory=list)
     workspace_secrets: list[str] = field(default_factory=list)
     label_ids: list[int] = field(default_factory=list)
+    resume: bool = False
+    session_id: Optional[str] = None
+
+    @root_validator()
+    def check_resume_and_session_id(cls, values: dict[str, Any]):
+        """Make sure that resume and session_id are in sync.
+
+        Args:
+            values: Dictionary of attributes.
+
+        Raises:
+            ValueError: If resume is enabled and a session ID
+                is not provided.
+
+        Returns:
+            Unmodified dictionary of attributes.
+        """
+        if values["resume"] and values["session_id"] is None:
+            message = "Resume can only be enabled with a session ID."
+            raise ValueError(message)
+        return values
 
     def fill_in(self, attr: str, value: Any):
         """Fill in any missing values.
@@ -148,36 +170,36 @@ class LaunchInfo:
         Returns:
             JSON representation.
         """
-        output = {
-            "launch": {
-                "computeEnvId": self.get("compute_env_id"),
-                "configProfiles": dedup(self.profiles),
-                "configText": self.nextflow_config,
-                "dateCreated": None,
-                "entryName": None,
-                "headJobCpus": None,
-                "headJobMemoryMb": None,
-                "id": None,
-                "labelIds": dedup(self.label_ids),
-                "mainScript": None,
-                "optimizationId": None,
-                "paramsText": json.dumps(self.params),
-                "pipeline": self.get("pipeline"),
-                "postRunScript": None,
-                "preRunScript": self.pre_run_script,
-                "pullLatest": False,
-                "resume": False,
-                "revision": self.revision,
-                "runName": self.run_name,
-                "schemaName": None,
-                "stubRun": False,
-                "towerConfig": None,
-                "userSecrets": dedup(self.user_secrets),
-                "workDir": self.get("work_dir"),
-                "workspaceSecrets": dedup(self.workspace_secrets),
-            }
+        launch = {
+            "computeEnvId": self.get("compute_env_id"),
+            "configProfiles": dedup(self.profiles),
+            "configText": self.nextflow_config,
+            "dateCreated": None,
+            "entryName": None,
+            "headJobCpus": None,
+            "headJobMemoryMb": None,
+            "id": None,
+            "labelIds": dedup(self.label_ids),
+            "mainScript": None,
+            "optimizationId": None,
+            "paramsText": json.dumps(self.params),
+            "pipeline": self.get("pipeline"),
+            "postRunScript": None,
+            "preRunScript": self.pre_run_script,
+            "pullLatest": False,
+            "revision": self.revision,
+            "runName": self.run_name,
+            "schemaName": None,
+            "stubRun": False,
+            "towerConfig": None,
+            "userSecrets": dedup(self.user_secrets),
+            "workDir": self.get("work_dir"),
+            "workspaceSecrets": dedup(self.workspace_secrets),
         }
-        return output
+        if self.resume:
+            launch["resume"] = self.resume
+            launch["sessionId"] = self.get("session_id")
+        return {"launch": launch}
 
 
 @dataclass(kw_only=False)
