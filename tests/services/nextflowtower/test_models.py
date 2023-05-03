@@ -54,13 +54,13 @@ def test_that_launch_info_can_be_created_with_resume_enabled():
 def test_that_launch_info_can_be_serialized_with_resume_enabled(launch_info):
     launch_info.resume = True
     launch_info.session_id = "foo"
-    json = launch_info.to_dict()
+    json = launch_info.to_json()
     assert "resume" in json["launch"]
     assert "sessionId" in json["launch"]
 
 
 def test_that_launch_info_can_be_serialized_with_resume_disabled(launch_info):
-    json = launch_info.to_dict()
+    json = launch_info.to_json()
     assert "resume" not in json["launch"]
     assert "sessionId" not in json["launch"]
 

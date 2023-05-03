@@ -1,21 +1,22 @@
-import json
-from dataclasses import field
+import json as json_module
+from dataclasses import field, fields
 from datetime import datetime
 from enum import Enum
-from typing import Any, Iterable, Optional
+from typing import Any, ClassVar, Iterable, Optional
 
 from pydantic import root_validator
 from pydantic.dataclasses import dataclass
 from typing_extensions import Self
 
-from orca.services.nextflowtower.utils import dedup, parse_datetime
+from orca.services.nextflowtower.utils import dedup
 
 
-class TaskStatus(Enum):
-    """enum containing all possible status values for
-    Nextflow Tower runs. terminal_states set which
-    statuses result in a run being determined to be
-    "complete"
+class WorkflowStatus(Enum):
+    """Valid values for the status of a Tower workflow.
+
+    Attributes:
+        terminate_states: List of status values for a workflow
+            that is no longer in progress.
     """
 
     SUBMITTED = "SUBMITTED"
@@ -29,47 +30,83 @@ class TaskStatus(Enum):
 
 
 @dataclass(kw_only=False)
-class User:
+class BaseTowerModel:
+    """Base model for Nextflow Tower models.
+
+    Attributes:
+        _key_mapping: Mapping between Python and API key names.
+            Only discordant names need to be listed.
+    """
+
+    _key_mapping: ClassVar[dict[str, str]]
+
+    @classmethod
+    def from_json(cls, json: dict[str, Any], **kwargs: Any) -> Self:
+        """Create instance from API JSON response.
+
+        Args:
+            json: API JSON response.
+            **kwargs: Special values.
+
+        Returns:
+            Class instance.
+        """
+        cls_kwargs = dict()
+
+        # First: populate with special values
+        cls_kwargs.update(kwargs)
+
+        # Second: populate with values with discordant key names
+        key_mapping = getattr(cls, "_key_mapping", {})
+        for python_name, api_name in key_mapping.items():
+            if python_name not in cls_kwargs:
+                value = None
+                target = json
+                for api_name_part in api_name.split("."):
+                    if api_name_part in target:
+                        value = target[api_name_part]
+                        target = value
+                if value is not None:
+                    cls_kwargs[python_name] = value
+
+        # Third: populate with remaining dataclass fields
+        for cls_field in fields(cls):
+            if cls_field.name not in cls_kwargs and cls_field.name in json:
+                cls_kwargs[cls_field.name] = json[cls_field.name]
+
+        return cls(**cls_kwargs)
+
+
+@dataclass(kw_only=False)
+class User(BaseTowerModel):
     """Nextflow Tower user."""
 
     id: int
     username: str
     email: str
 
-    @classmethod
-    def from_json(cls, response: dict[str, Any]) -> Self:
-        """Create user from API JSON response.
-
-        Returns:
-            User instance.
-        """
-        return cls(response["id"], response["userName"], response["email"])
+    _key_mapping = {"username": "userName"}
 
 
 @dataclass(kw_only=False)
-class Organization:
+class Organization(BaseTowerModel):
     """Nextflow Tower organization."""
 
     id: int
     name: str
 
-    @classmethod
-    def from_json(cls, response: dict[str, Any]) -> Self:
-        """Create organization from API JSON response.
-
-        Returns:
-            Organization instance.
-        """
-        return cls(response["orgId"], response["orgName"])
+    _key_mapping = {"id": "orgId", "name": "orgName"}
 
 
 @dataclass(kw_only=False)
-class Workspace:
+class Workspace(BaseTowerModel):
     """Nextflow Tower workspace."""
 
     id: int
     name: str
     org: Organization
+
+    _key_mapping = {"id": "workspaceId", "name": "workspaceName"}
 
     @property
     def full_name(self) -> str:
@@ -77,18 +114,22 @@ class Workspace:
         return f"{self.org.name}/{self.name}".lower()
 
     @classmethod
-    def from_json(cls, response: dict[str, Any]) -> Self:
-        """Create workspace from API JSON response.
+    def from_json(cls, json: dict[str, Any], **kwargs: Any) -> Self:
+        """Create instance from API JSON response.
+
+        Args:
+            json: API JSON response.
+            **kwargs: Special values.
 
         Returns:
-            Workspace instance.
+            Class instance.
         """
-        org = Organization.from_json(response)
-        return cls(response["workspaceId"], response["workspaceName"], org)
+        org = Organization.from_json(json)
+        return super().from_json(json, org=org, **kwargs)
 
 
 @dataclass(kw_only=False)
-class LaunchInfo:
+class LaunchInfo(BaseTowerModel):
     """Nextflow Tower workflow launch specification."""
 
     pipeline: Optional[str] = None
@@ -164,7 +205,7 @@ class LaunchInfo:
             raise ValueError(message)
         return getattr(self, name)
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_json(self) -> dict[str, Any]:
         """Generate JSON representation of a launch specification.
 
         Returns:
@@ -182,7 +223,7 @@ class LaunchInfo:
             "labelIds": dedup(self.label_ids),
             "mainScript": None,
             "optimizationId": None,
-            "paramsText": json.dumps(self.params),
+            "paramsText": json_module.dumps(self.params),
             "pipeline": self.get("pipeline"),
             "postRunScript": None,
             "preRunScript": self.pre_run_script,
@@ -203,7 +244,7 @@ class LaunchInfo:
 
 
 @dataclass(kw_only=False)
-class Label:
+class Label(BaseTowerModel):
     """Nextflow Tower workflow run label."""
 
     id: int
@@ -211,40 +252,17 @@ class Label:
     value: Optional[str]
     resource: bool
 
-    @classmethod
-    def from_json(cls, response: dict[str, Any]) -> Self:
-        """Create label from API JSON response.
-
-        Returns:
-            Label instance.
-        """
-        return cls(**response)
-
 
 @dataclass(kw_only=False)
-class ComputeEnvSummary:
+class ComputeEnvSummary(BaseTowerModel):
     """Nextflow Tower compute environment summary."""
 
     id: str
     name: str
     status: str
     work_dir: str
-    raw: dict
 
-    @classmethod
-    def from_json(cls, response: dict[str, Any]) -> Self:
-        """Create compute environment from API JSON response.
-
-        Returns:
-            Compute environment instance.
-        """
-        return cls(
-            response["id"],
-            response["name"],
-            response["status"],
-            response["workDir"],
-            response,
-        )
+    _key_mapping = {"work_dir": "workDir"}
 
 
 @dataclass(kw_only=False)
@@ -255,20 +273,42 @@ class ComputeEnv(ComputeEnvSummary):
     pre_run_script: str
     labels: list[Label]
 
+    _key_mapping = {
+        "date_created": "dateCreated",
+        "work_dir": "config.workDir",
+        "pre_run_script": "config.preRunScript",
+    }
+
     @classmethod
-    def from_json(cls, response: dict[str, Any]) -> Self:
-        """Create compute environment from API JSON response.
+    def from_json(cls, json: dict[str, Any], **kwargs: Any) -> Self:
+        """Create instance from API JSON response.
+
+        Args:
+            json: API JSON response.
+            **kwargs: Special values.
 
         Returns:
-            Compute environment instance.
+            Class instance.
         """
-        return cls(
-            id=response["id"],
-            name=response["name"],
-            status=response["status"],
-            work_dir=response["config"]["workDir"],
-            date_created=parse_datetime(response["dateCreated"]),
-            pre_run_script=response["config"]["preRunScript"],
-            labels=[Label.from_json(label) for label in response["labels"]],
-            raw=response,
-        )
+        labels = [Label.from_json(label) for label in json["labels"]]
+        return super().from_json(json, labels=labels, **kwargs)
+
+
+@dataclass(kw_only=False)
+class Workflow(BaseTowerModel):
+    """Nextflow Tower workflow run details."""
+
+    id: str
+    complete: Optional[datetime]
+    run_name: str
+    session_id: str
+    username: str
+    projectName: str
+    status: WorkflowStatus
+
+    _key_mapping = {
+        "run_name": "runName",
+        "session_id": "sessionId",
+        "username": "userName",
+        "project_name": "projectName",
+    }

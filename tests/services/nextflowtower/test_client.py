@@ -133,9 +133,17 @@ def test_that_launch_workflow_works(client, mocker, get_response):
 
 
 def test_that_get_workflow_returns_expected_response(client, mocker, get_response):
-    expected = get_response("get_workflow")
-    mock = mocker.patch.object(client, "get")
-    mock.return_value = expected
+    response = get_response("get_workflow")
+    mock = mocker.patch.object(client, "request_json")
+    mock.return_value = response
     actual = client.get_workflow(workspace_id=98765, workflow_id="123456789")
     mock.assert_called_once()
-    assert actual == expected
+    assert actual == models.Workflow.from_json(response["workflow"])
+
+
+def test_that_list_workflows_works(client, mocker, get_response):
+    mock = mocker.patch.object(client, "request_json")
+    mock.return_value = get_response("list_workflows")
+    result = client.list_workflows()
+    mock.assert_called()
+    assert len(result) == 3

@@ -1,5 +1,5 @@
 from functools import cached_property
-from typing import ClassVar, Optional, cast
+from typing import ClassVar, Optional
 
 from pydantic.dataclasses import dataclass
 
@@ -8,7 +8,7 @@ from orca.services.base.ops import BaseOps
 from orca.services.nextflowtower.client import NextflowTowerClient
 from orca.services.nextflowtower.client_factory import NextflowTowerClientFactory
 from orca.services.nextflowtower.config import NextflowTowerConfig
-from orca.services.nextflowtower.models import LaunchInfo, TaskStatus
+from orca.services.nextflowtower.models import LaunchInfo, Workflow, WorkflowStatus
 
 
 @dataclass(kw_only=False)
@@ -132,19 +132,36 @@ class NextflowTowerOps(BaseOps):
         return self.client.launch_workflow(launch_info, self.workspace_id)
 
     # TODO: Consider switching return value to a namedtuple
-    def get_workflow_status(self, workflow_id: str) -> tuple[TaskStatus, bool]:
-        """Gets status of workflow run
+    def get_workflow_status(self, workflow_id: str) -> tuple[WorkflowStatus, bool]:
+        """Retrieve status of a workflow run.
 
         Args:
-            workflow_id (str): The ID number for a workflow run to get information about
+            workflow_id: Workflow run ID.
 
         Returns:
-            tuple: Tuple containing 1. status (str) and
-            2. Whether the workflow is done (boolean)
+            Workflow status and whether the workflow is done.
         """
-        response = self.client.get_workflow(
-            workspace_id=self.workspace_id, workflow_id=workflow_id
-        )
-        task_status = cast(TaskStatus, response["workflow"]["status"])
-        is_done = task_status in TaskStatus.terminal_states.value
-        return task_status, is_done
+        workflow = self.client.get_workflow(workflow_id, self.workspace_id)
+        is_done = workflow.status.value in WorkflowStatus.terminal_states.value
+        return workflow.status, is_done
+
+    def list_workflows(
+        self,
+        search_filter: str = "",
+        only_orca_launches: bool = True,
+    ) -> list[Workflow]:
+        """List available workflows that match search filter.
+
+        Attributes:
+            search_filter: A Nextflow Tower search query, as you would
+                compose it in the runs search bar. Defaults to nothing.
+            only_orca_launches: Whether to filter list of workflows for
+                those that were launched by Orca. Defaults to True.
+
+        Returns:
+            List of workflow instances.
+        """
+        if only_orca_launches is None:
+            search_filter = f"{search_filter} label:{self.launch_label}"
+        workflows = self.client.list_workflows(search_filter, self.workspace_id)
+        return workflows

@@ -142,11 +142,12 @@ def test_that_get_workflow_status_returns_expected_tuple_workflow_is_complete(
     mocker, get_response, mocked_ops
 ):
     response = get_response("get_workflow")
+    expected = models.Workflow.from_json(response["workflow"])
     mock = mocker.patch.object(mocked_ops, "client")
-    mock.get_workflow.return_value = response
+    mock.get_workflow.return_value = expected
     result = mocked_ops.get_workflow_status(workflow_id="123456789")
     mock.get_workflow.assert_called_once()
-    assert result == ("SUCCEEDED", True)
+    assert result == (models.WorkflowStatus("SUCCEEDED"), True)
 
 
 def test_that_get_workflow_status_returns_expected_tuple_workflow_is_not_complete(
@@ -155,8 +156,9 @@ def test_that_get_workflow_status_returns_expected_tuple_workflow_is_not_complet
     response = get_response("get_workflow")
     response["workflow"]["complete"] = None
     response["workflow"]["status"] = "SUBMITTED"
+    expected = models.Workflow.from_json(response["workflow"])
     mock = mocker.patch.object(mocked_ops, "client")
-    mock.get_workflow.return_value = response
+    mock.get_workflow.return_value = expected
     result = mocked_ops.get_workflow_status(workflow_id="123456789")
     mock.get_workflow.assert_called_once()
-    assert result == ("SUBMITTED", False)
+    assert result == (models.WorkflowStatus("SUBMITTED"), False)
