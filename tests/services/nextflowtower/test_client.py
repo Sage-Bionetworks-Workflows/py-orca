@@ -41,7 +41,7 @@ def test_that_get_user_info_works(client, mocker, get_response):
     assert actual == models.User.from_json(expected["user"])
 
 
-def test_that_get_user_info_fails_with_nonstandard_response(client, mocker):
+def test_that_get_user_info_fails_with_400_response(client, mocker):
     mock = mocker.patch.object(client, "request_json")
     mock.return_value = {"message": "foobar"}
     with pytest.raises(HTTPError):
@@ -125,6 +125,7 @@ def test_that_launch_workflow_works(client, mocker, get_response):
     launch_spec = models.LaunchInfo(
         compute_env_id="foo",
         pipeline="bar",
+        run_name="foobar",
         work_dir="s3://path",
         profiles=["test"],
     )

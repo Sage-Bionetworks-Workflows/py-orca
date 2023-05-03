@@ -83,7 +83,11 @@ class NextflowTowerClient:
             A dictionary from deserializing the JSON response.
         """
         response = self.request(method, path, **kwargs)
-        response.raise_for_status()
+        try:
+            response.raise_for_status()
+        except HTTPError as e:
+            # Add extra context if possible
+            raise HTTPError(response.text) from e
         return response.json()
 
     def request_paged(self, method: str, path: str, **kwargs) -> dict[str, Any]:

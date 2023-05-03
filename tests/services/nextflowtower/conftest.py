@@ -27,6 +27,7 @@ def ops(config):
     yield NextflowTowerOps(config)
 
 
+# TODO: Mock `client` using a property mock
 @pytest.fixture
 def mocked_ops(config, client, mocker):
     mocker.patch.object(NextflowTowerOps, "client", return_value=client)

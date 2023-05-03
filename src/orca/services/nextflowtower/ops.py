@@ -9,6 +9,7 @@ from orca.services.nextflowtower.client import NextflowTowerClient
 from orca.services.nextflowtower.client_factory import NextflowTowerClientFactory
 from orca.services.nextflowtower.config import NextflowTowerConfig
 from orca.services.nextflowtower.models import LaunchInfo, Workflow, WorkflowStatus
+from orca.services.nextflowtower.utils import increment_suffix
 
 
 @dataclass(kw_only=False)
@@ -104,6 +105,7 @@ class NextflowTowerOps(BaseOps):
         self,
         launch_info: LaunchInfo,
         compute_env_filter: Optional[str] = None,
+        ignore_previous_runs: bool = False,
     ) -> str:
         """Launch a workflow using the latest matching compute env.
 
@@ -111,10 +113,32 @@ class NextflowTowerOps(BaseOps):
             launch_info: Workflow launch information.
             compute_env_filter: Filter for matching compute
                 environments. Default to None.
+            ignore_previous_runs: Whether to ignore previous
+                workflow runs with the same attributes. Note
+                that enabling this might result in duplicate
+                workflow runs.
 
         Returns:
             Workflow run ID.
         """
+        # Make sure that essential attributes are set
+        if launch_info.pipeline is None or launch_info.run_name is None:
+            message = "LaunchInfo 'run_name' and 'pipeline' attributes must be set."
+            raise ValueError(message)
+
+        # Update launch_info if there are previous workflow runs
+        if not ignore_previous_runs:
+            latest_run = self.get_latest_previous_workflow(launch_info)
+            if latest_run:
+                # Return ID for latest run if ongoing, succeeded, or cancelled
+                skip_statuses = {"SUCCEEDED", "CANCELLED"}
+                if not latest_run.is_done or latest_run.status.value in skip_statuses:
+                    return latest_run.id
+                launch_info.fill_in("resume", True)
+                launch_info.fill_in("session_id", latest_run.session_id)
+                launch_info.run_name = increment_suffix(launch_info.run_name)
+
+        # Get relevant compute environment and its resource tags
         compute_env_id = self.get_latest_compute_env(compute_env_filter)
         compute_env = self.client.get_compute_env(compute_env_id, self.workspace_id)
         label_ids = [label.id for label in compute_env.labels]
@@ -123,8 +147,9 @@ class NextflowTowerOps(BaseOps):
         query_label_id = self.create_label(self.launch_label)
         label_ids.append(query_label_id)
 
+        # TODO: Fill in revision using '/pipelines/info' endpoint
         # Update launch_info with compute_env defaults and label ID
-        launch_info.fill_in("compute_env_id", compute_env_id)
+        launch_info.fill_in("compute_env_id", compute_env.id)
         launch_info.fill_in("work_dir", compute_env.work_dir)
         launch_info.fill_in("pre_run_script", compute_env.pre_run_script)
         launch_info.add_in("label_ids", label_ids)
@@ -145,11 +170,7 @@ class NextflowTowerOps(BaseOps):
         is_done = workflow.status.value in WorkflowStatus.terminal_states.value
         return workflow.status, is_done
 
-    def list_workflows(
-        self,
-        search_filter: str = "",
-        only_orca_launches: bool = True,
-    ) -> list[Workflow]:
+    def list_workflows(self, search_filter: str = "") -> list[Workflow]:
         """List available workflows that match search filter.
 
         Attributes:
@@ -161,7 +182,60 @@ class NextflowTowerOps(BaseOps):
         Returns:
             List of workflow instances.
         """
-        if only_orca_launches is None:
+        if self.launch_label is not None:
             search_filter = f"{search_filter} label:{self.launch_label}"
         workflows = self.client.list_workflows(search_filter, self.workspace_id)
         return workflows
+
+    def list_previous_workflows(self, launch_info: LaunchInfo) -> list[Workflow]:
+        """Retrieve the list of previously launched workflows.
+
+        Args:
+            launch_info: Workflow launch information.
+
+        Returns:
+            List of previously launched workflows.
+        """
+        workflows = self.list_workflows()
+
+        previous_workflows = list()
+        for workflow in workflows:
+            if workflow.projectName != launch_info.pipeline:
+                continue
+
+            # TODO: Rename `run_name` to `unique_id` (or similar)
+            prefix = launch_info.run_name
+            if prefix and not workflow.run_name.startswith(prefix):
+                continue
+
+            previous_workflows.append(workflow)
+
+        return previous_workflows
+
+    def get_latest_previous_workflow(
+        self,
+        launch_info: LaunchInfo,
+    ) -> Optional[Workflow]:
+        """Retrieve the latest run among previously launched workflows.
+
+        Args:
+            launch_info: Workflow launch information.
+
+        Returns:
+            Latest run among previously launched workflows.
+        """
+        previous_runs = self.list_previous_workflows(launch_info)
+        if len(previous_runs) == 0:
+            return None
+
+        # First check and return any ongoing runs
+        ongoing_runs = [run for run in previous_runs if not run.is_done]
+        if len(ongoing_runs) > 1:  # pragma: no cover
+            message = f"Multiple ongoing workflow runs: {ongoing_runs}"
+            raise ValueError(message)
+        elif len(ongoing_runs) == 1:
+            return ongoing_runs[0]
+
+        # Otherwise, return latest based on submission timestamp
+        sorted_runs = sorted(previous_runs, key=lambda x: x.get("submit"))
+        return sorted_runs[-1]

@@ -1,5 +1,5 @@
 import json as json_module
-from dataclasses import field, fields
+from dataclasses import KW_ONLY, field, fields
 from datetime import datetime
 from enum import Enum
 from typing import Any, ClassVar, Iterable, Optional
@@ -8,7 +8,7 @@ from pydantic import root_validator
 from pydantic.dataclasses import dataclass
 from typing_extensions import Self
 
-from orca.services.nextflowtower.utils import dedup
+from orca.services.nextflowtower.utils import dedup, get_nested
 
 
 class WorkflowStatus(Enum):
@@ -38,6 +38,9 @@ class BaseTowerModel:
             Only discordant names need to be listed.
     """
 
+    _: KW_ONLY
+    raw: Optional[dict[str, Any]] = field(default=None, repr=False, compare=False)
+
     _key_mapping: ClassVar[dict[str, str]]
 
     @classmethod
@@ -51,30 +54,36 @@ class BaseTowerModel:
         Returns:
             Class instance.
         """
-        cls_kwargs = dict()
+        cls_kwargs = {"raw": json}
 
-        # First: populate with special values
-        cls_kwargs.update(kwargs)
-
-        # Second: populate with values with discordant key names
+        # Populate with values with discordant key names
         key_mapping = getattr(cls, "_key_mapping", {})
         for python_name, api_name in key_mapping.items():
-            if python_name not in cls_kwargs:
-                value = None
-                target = json
-                for api_name_part in api_name.split("."):
-                    if api_name_part in target:
-                        value = target[api_name_part]
-                        target = value
-                if value is not None:
-                    cls_kwargs[python_name] = value
+            cls_kwargs[python_name] = get_nested(json, api_name)
 
-        # Third: populate with remaining dataclass fields
+        # Populate with remaining dataclass fields
         for cls_field in fields(cls):
             if cls_field.name not in cls_kwargs and cls_field.name in json:
                 cls_kwargs[cls_field.name] = json[cls_field.name]
 
+        # Populate (and override) with special values
+        cls_kwargs.update(kwargs)
+
         return cls(**cls_kwargs)
+
+    def get(self, name: str) -> Any:
+        """Retrieve attribute value, which cannot be None.
+
+        Args:
+            name: Atribute name.
+
+        Returns:
+            Attribute value (not None).
+        """
+        if getattr(self, name, None) is None:
+            message = f"Attribute '{name}' must be set (not None) by this point."
+            raise ValueError(message)
+        return getattr(self, name)
 
 
 @dataclass(kw_only=False)
@@ -136,10 +145,10 @@ class LaunchInfo(BaseTowerModel):
     compute_env_id: Optional[str] = None
     work_dir: Optional[str] = None
     revision: Optional[str] = None
-    params: Optional[dict] = None
     nextflow_config: Optional[str] = None
     run_name: Optional[str] = None
     pre_run_script: Optional[str] = None
+    params: Optional[dict] = None
     profiles: list[str] = field(default_factory=list)
     user_secrets: list[str] = field(default_factory=list)
     workspace_secrets: list[str] = field(default_factory=list)
@@ -167,7 +176,7 @@ class LaunchInfo(BaseTowerModel):
         return values
 
     def fill_in(self, attr: str, value: Any):
-        """Fill in any missing values.
+        """Fill in any missing or falsy values.
 
         Args:
             attr: Attribute name.
@@ -191,20 +200,6 @@ class LaunchInfo(BaseTowerModel):
         updated_values = dedup(updated_values)
         setattr(self, attr, updated_values)
 
-    def get(self, name: str) -> Any:
-        """Retrieve attribute value, which cannot be None.
-
-        Args:
-            name: Atribute name.
-
-        Returns:
-            Attribute value (not None).
-        """
-        if getattr(self, name, None) is None:
-            message = f"Attribute '{name}' must be set (not None) by this point."
-            raise ValueError(message)
-        return getattr(self, name)
-
     def to_json(self) -> dict[str, Any]:
         """Generate JSON representation of a launch specification.
 
@@ -223,7 +218,7 @@ class LaunchInfo(BaseTowerModel):
             "labelIds": dedup(self.label_ids),
             "mainScript": None,
             "optimizationId": None,
-            "paramsText": json_module.dumps(self.params),
+            "paramsText": json_module.dumps(self.params) if self.params else "",
             "pipeline": self.get("pipeline"),
             "postRunScript": None,
             "preRunScript": self.pre_run_script,
@@ -300,15 +295,26 @@ class Workflow(BaseTowerModel):
 
     id: str
     complete: Optional[datetime]
+    submit: Optional[datetime]
     run_name: str
     session_id: str
     username: str
     projectName: str
+    work_dir: str
     status: WorkflowStatus
+    params: Optional[dict[str, Any]]
+    commit_id: Optional[str]
 
     _key_mapping = {
         "run_name": "runName",
         "session_id": "sessionId",
         "username": "userName",
         "project_name": "projectName",
+        "work_dir": "workDir",
+        "commit_id": "commitId",
     }
+
+    @property
+    def is_done(self) -> bool:
+        """Whether the workflow is done running."""
+        return self.status.value in WorkflowStatus.terminal_states.value
