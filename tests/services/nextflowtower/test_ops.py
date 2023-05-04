@@ -121,6 +121,7 @@ def test_that_launch_workflow_works(mocked_ops, get_response, mocker):
     launch_info = models.LaunchInfo(
         compute_env_id="5ykJF",
         pipeline="some/pipeline",
+        run_name="foobar",
         revision="1.1",
         profiles=["test"],
         params={"outdir": "foo"},
@@ -129,24 +130,24 @@ def test_that_launch_workflow_works(mocked_ops, get_response, mocker):
 
     mocker.patch.object(mocked_ops, "get_latest_compute_env")
 
-    compute_env_response = get_response("get_compute_env")["computeEnv"]
-    compute_env = models.ComputeEnv.from_json(compute_env_response)
-    mocked_ops.client.get_compute_env.return_value = compute_env
+    response = get_response("get_compute_env")
+    mocker.patch.object(mocked_ops.client, "get", return_value=response)
 
     mocked_ops.launch_workflow(launch_info, "ondemand")
     mocked_ops.client.launch_workflow.assert_called_once()
-    assert launch_info.compute_env_id == compute_env.id
+    assert launch_info.compute_env_id == response["computeEnv"]["id"]
 
 
 def test_that_get_workflow_status_returns_expected_tuple_workflow_is_complete(
     mocker, get_response, mocked_ops
 ):
     response = get_response("get_workflow")
+    expected = models.Workflow.from_json(response["workflow"])
     mock = mocker.patch.object(mocked_ops, "client")
-    mock.get_workflow.return_value = response
+    mock.get_workflow.return_value = expected
     result = mocked_ops.get_workflow_status(workflow_id="123456789")
     mock.get_workflow.assert_called_once()
-    assert result == ("SUCCEEDED", True)
+    assert result == (models.WorkflowStatus("SUCCEEDED"), True)
 
 
 def test_that_get_workflow_status_returns_expected_tuple_workflow_is_not_complete(
@@ -155,8 +156,142 @@ def test_that_get_workflow_status_returns_expected_tuple_workflow_is_not_complet
     response = get_response("get_workflow")
     response["workflow"]["complete"] = None
     response["workflow"]["status"] = "SUBMITTED"
+    expected = models.Workflow.from_json(response["workflow"])
     mock = mocker.patch.object(mocked_ops, "client")
-    mock.get_workflow.return_value = response
+    mock.get_workflow.return_value = expected
     result = mocked_ops.get_workflow_status(workflow_id="123456789")
     mock.get_workflow.assert_called_once()
-    assert result == ("SUBMITTED", False)
+    assert result == (models.WorkflowStatus("SUBMITTED"), False)
+
+
+def test_that_list_workflows_filters_on_launch_label(mocked_ops, mocker):
+    mock = mocker.patch.object(mocked_ops.client, "list_workflows")
+    mocked_ops.list_workflows()
+    mock.assert_called_once()
+    search_filter = mock.call_args.args[0]
+    assert f"label:{mocked_ops.launch_label}" in search_filter
+
+
+def test_that_list_workflows_doesnt_filter_on_launch_label_when_absent(
+    mocked_ops, mocker
+):
+    mock = mocker.patch.object(mocked_ops.client, "list_workflows")
+    mocked_ops.launch_label = None
+    mocked_ops.list_workflows()
+    mock.assert_called_once()
+    search_filter = mock.call_args.args[0]
+    assert f"label:{mocked_ops.launch_label}" not in search_filter
+
+
+def test_that_list_previous_workflows_matches_the_right_entries(
+    mocked_ops, client, mocker, get_response
+):
+    mock = mocker.patch.object(client, "get")
+    mock.return_value = get_response("list_workflows")
+    workflows = client.list_workflows()
+
+    launch_info = models.LaunchInfo(
+        pipeline="nf-core/rnaseq",
+        revision="3.11.2",
+        profiles=["test"],
+        run_name="hungry_cori",
+        params={"outdir": "foo"},
+    )
+    mocker.patch.object(mocked_ops, "list_workflows", return_value=workflows)
+    result = mocked_ops.list_previous_workflows(launch_info)
+    assert len(result) == 2
+
+
+def test_that_get_latest_previous_workflow_returns_an_ongoing_run(
+    mocked_ops, client, mocker, get_response
+):
+    mock = mocker.patch.object(client, "get")
+    mock.return_value = get_response("get_workflow")
+    workflow = client.get_workflow("foo")
+    workflow.status = models.WorkflowStatus("RUNNING")
+
+    launch_info = models.LaunchInfo(
+        pipeline="nf-core/rnaseq",
+        revision="3.11.2",
+        profiles=["test"],
+        run_name="hungry_cori",
+        params={"outdir": "foo"},
+    )
+    mocker.patch.object(mocked_ops, "list_previous_workflows", return_value=[workflow])
+    result = mocked_ops.get_latest_previous_workflow(launch_info)
+    assert result.id == workflow.id
+
+
+def test_for_an_error_when_launching_a_workflow_without_a_run_name(mocked_ops):
+    launch_info = models.LaunchInfo(pipeline="nf-core/rnaseq")
+    with pytest.raises(ValueError):
+        mocked_ops.launch_workflow(launch_info)
+
+
+def test_for_an_error_when_launching_a_workflow_without_a_pipeline(mocked_ops):
+    launch_info = models.LaunchInfo(run_name="foobar")
+    with pytest.raises(ValueError):
+        mocked_ops.launch_workflow(launch_info)
+
+
+def test_that_launch_workflow_considers_previous_runs(
+    mocked_ops, client, mocker, get_response
+):
+    wf_mock = mocker.patch.object(client, "get")
+    wf_mock.return_value = get_response("get_workflow")
+    workflow = client.get_workflow("foo")
+    workflow.status = models.WorkflowStatus("FAILED")
+
+    latest_wf_mock = mocker.patch.object(mocked_ops, "get_latest_previous_workflow")
+    latest_wf_mock.return_value = workflow
+
+    mocker.patch.object(mocked_ops, "get_latest_compute_env")
+
+    latest_ce_mock = mocker.patch.object(client, "get")
+    latest_ce_mock.return_value = get_response("get_compute_env")
+    compute_env = client.get_compute_env("foo")
+    mocker.patch.object(mocked_ops.client, "get_compute_env", return_value=compute_env)
+
+    mocker.patch.object(mocked_ops, "create_label", return_value=123)
+
+    launch_info = models.LaunchInfo(
+        pipeline="nextflow-io/example-workflow",
+        run_name="example-run",
+    )
+
+    launch_mock = mocker.patch.object(mocked_ops.client, "launch_workflow")
+    mocked_ops.launch_workflow(launch_info)
+
+    launch_mock.assert_called_once()
+    assert launch_info.run_name == "example-run_2"
+    assert launch_info.resume
+    assert launch_info.session_id == workflow.session_id
+
+
+def test_that_launch_workflow_works_when_there_are_no_previous_runs(
+    mocked_ops, client, mocker, get_response
+):
+    latest_wf_mock = mocker.patch.object(mocked_ops, "get_latest_previous_workflow")
+    latest_wf_mock.return_value = None
+
+    mocker.patch.object(mocked_ops, "get_latest_compute_env")
+
+    latest_ce_mock = mocker.patch.object(client, "get")
+    latest_ce_mock.return_value = get_response("get_compute_env")
+    compute_env = client.get_compute_env("foo")
+    mocker.patch.object(mocked_ops.client, "get_compute_env", return_value=compute_env)
+
+    mocker.patch.object(mocked_ops, "create_label", return_value=123)
+
+    launch_info = models.LaunchInfo(
+        pipeline="nextflow-io/example-workflow",
+        run_name="example-run",
+    )
+
+    launch_mock = mocker.patch.object(mocked_ops.client, "launch_workflow")
+    mocked_ops.launch_workflow(launch_info)
+
+    launch_mock.assert_called_once()
+    assert launch_info.run_name == "example-run"
+    assert not launch_info.resume
+    assert launch_info.session_id is None

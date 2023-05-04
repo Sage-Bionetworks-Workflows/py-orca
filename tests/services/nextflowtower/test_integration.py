@@ -34,15 +34,21 @@ def test_that_a_valid_client_can_be_constructed_and_tested(client):
     assert client.list_user_workspaces()
 
 
-@pytest.mark.cost
 @pytest.mark.integration
 def test_that_a_workflow_can_be_launched(ops):
-    scratch_bucket = "s3://orca-service-test-project-tower-scratch/"
     launch_info = models.LaunchInfo(
-        pipeline="nf-core/rnaseq",
-        revision="3.11.2",
-        profiles=["test"],
-        params={"outdir": f"{scratch_bucket}/2days/launch_test"},
+        pipeline="nextflow-io/hello",
+        run_name="test_launch_workflow",
     )
-    workflow_id = ops.launch_workflow(launch_info, "ondemand")
+    workflow_id = ops.launch_workflow(launch_info, "spot", ignore_previous_runs=True)
+    assert workflow_id
+
+
+@pytest.mark.integration
+def test_that_a_workflow_can_be_relaunched(ops):
+    launch_info = models.LaunchInfo(
+        pipeline="nextflow-io/hello",
+        run_name="test_relaunch_workflow",
+    )
+    workflow_id = ops.launch_workflow(launch_info, "spot")
     assert workflow_id
