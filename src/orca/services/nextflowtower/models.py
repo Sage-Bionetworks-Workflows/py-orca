@@ -299,7 +299,7 @@ class Workflow(BaseTowerModel):
     run_name: str
     session_id: str
     username: str
-    projectName: str
+    project_name: str
     work_dir: str
     status: WorkflowStatus
     params: Optional[dict[str, Any]]
