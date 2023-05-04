@@ -14,7 +14,15 @@ finally:
 
 import logging
 
-
-# Set default logging handler to avoid "No handler found" warnings
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+# Capture warnings made with the warnings standard module
 logging.captureWarnings(True)
+
+# Configure a stream handler
+handler = logging.StreamHandler()
+formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+handler.setFormatter(formatter)
+
+# Configure a module logger
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+logger.addHandler(handler)
