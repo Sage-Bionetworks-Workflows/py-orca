@@ -25,5 +25,4 @@ handler.setFormatter(formatter)
 # Configure a module logger
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-logger.handlers.clear()
 logger.addHandler(handler)

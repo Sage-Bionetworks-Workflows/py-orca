@@ -1,10 +1,10 @@
+import logging
 from dataclasses import field
 from functools import cached_property
 from typing import ClassVar, Optional
 
 from pydantic.dataclasses import dataclass
 
-from orca import logger
 from orca.errors import ConfigError
 from orca.services.base.ops import BaseOps
 from orca.services.nextflowtower.client import NextflowTowerClient
@@ -12,6 +12,8 @@ from orca.services.nextflowtower.client_factory import NextflowTowerClientFactor
 from orca.services.nextflowtower.config import NextflowTowerConfig
 from orca.services.nextflowtower.models import LaunchInfo, Workflow, WorkflowStatus
 from orca.services.nextflowtower.utils import increment_suffix
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(kw_only=False)
@@ -133,19 +135,18 @@ class NextflowTowerOps(BaseOps):
             latest_run = self.get_latest_previous_workflow(launch_info)
             if latest_run:
                 status = latest_run.status.value
-                run_repr = f"{latest_run.run_name} ({latest_run.id})"
+                run_repr = f"{latest_run.run_name} (id='{latest_run.id}', {status=})"
                 # Return ID for latest run if ongoing, succeeded, or cancelled
-                skip_statuses = {"SUCCEEDED"}
                 if not latest_run.is_done:  # pragma: no cover
                     logger.info(f"Found an ongoing previous run: {run_repr}")
                     return latest_run.id
-                if latest_run.status in skip_statuses:
-                    logger.info(f"Found a previous ({status}) run: {run_repr}")
+                if status in {"SUCCEEDED", "UNKNOWN"}:
+                    logger.info(f"Found a previous run: {run_repr}")
                     return latest_run.id
                 launch_info.fill_in("resume", True)
                 launch_info.fill_in("session_id", latest_run.session_id)
                 launch_info.run_name = increment_suffix(latest_run.run_name)
-                logger.info(f"Relaunching from a previous ({status}) run: {run_repr}")
+                logger.info(f"Relaunching from a previous run: {run_repr}")
 
         # Get relevant compute environment and its resource tags
         compute_env_id = self.get_latest_compute_env(compute_env_filter)
