@@ -27,6 +27,3 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 logger.handlers.clear()
 logger.addHandler(handler)
-
-# Silence Airflow logging
-logging.getLogger("airflow").setLevel(logging.ERROR)
