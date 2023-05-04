@@ -11,7 +11,7 @@ from typing_extensions import Self
 from orca.services.nextflowtower.utils import dedup, get_nested
 
 
-class WorkflowStatus(Enum):
+class WorkflowStatus(str, Enum):
     """Valid values for the status of a Tower workflow.
 
     Attributes:
@@ -317,4 +317,4 @@ class Workflow(BaseTowerModel):
     @property
     def is_done(self) -> bool:
         """Whether the workflow is done running."""
-        return self.status.value in WorkflowStatus.terminal_states.value
+        return self.status in WorkflowStatus.terminal_states

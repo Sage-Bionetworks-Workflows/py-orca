@@ -1,8 +1,10 @@
+from dataclasses import field
 from functools import cached_property
 from typing import ClassVar, Optional
 
 from pydantic.dataclasses import dataclass
 
+from orca import logger
 from orca.errors import ConfigError
 from orca.services.base.ops import BaseOps
 from orca.services.nextflowtower.client import NextflowTowerClient
@@ -23,7 +25,7 @@ class NextflowTowerOps(BaseOps):
         client_factory_class: The class for constructing clients.
     """
 
-    config: NextflowTowerConfig
+    config: NextflowTowerConfig = field(default_factory=NextflowTowerConfig)
 
     client_factory_class = NextflowTowerClientFactory
 
@@ -130,13 +132,20 @@ class NextflowTowerOps(BaseOps):
         if not ignore_previous_runs:
             latest_run = self.get_latest_previous_workflow(launch_info)
             if latest_run:
+                status = latest_run.status.value
+                run_repr = f"{latest_run.run_name} ({latest_run.id})"
                 # Return ID for latest run if ongoing, succeeded, or cancelled
-                skip_statuses = {"SUCCEEDED", "CANCELLED"}
-                if not latest_run.is_done or latest_run.status.value in skip_statuses:
+                skip_statuses = {"SUCCEEDED"}
+                if not latest_run.is_done:  # pragma: no cover
+                    logger.info(f"Found an ongoing previous run: {run_repr}")
+                    return latest_run.id
+                if latest_run.status in skip_statuses:
+                    logger.info(f"Found a previous ({status}) run: {run_repr}")
                     return latest_run.id
                 launch_info.fill_in("resume", True)
                 launch_info.fill_in("session_id", latest_run.session_id)
-                launch_info.run_name = increment_suffix(launch_info.run_name)
+                launch_info.run_name = increment_suffix(latest_run.run_name)
+                logger.info(f"Relaunching from a previous ({status}) run: {run_repr}")
 
         # Get relevant compute environment and its resource tags
         compute_env_id = self.get_latest_compute_env(compute_env_filter)
@@ -154,7 +163,21 @@ class NextflowTowerOps(BaseOps):
         launch_info.fill_in("pre_run_script", compute_env.pre_run_script)
         launch_info.add_in("label_ids", label_ids)
 
-        return self.client.launch_workflow(launch_info, self.workspace_id)
+        workflow_id = self.client.launch_workflow(launch_info, self.workspace_id)
+        workflow_repr = f"{launch_info.run_name} ({workflow_id})"
+        logger.info(f"Launched a new workflow run: {workflow_repr}")
+        return workflow_id
+
+    def get_workflow(self, workflow_id: str) -> Workflow:
+        """Retrieve details about a workflow run.
+
+        Args:
+            workflow_id: Workflow run ID.
+
+        Returns:
+            Workflow instance.
+        """
+        return self.client.get_workflow(workflow_id, self.workspace_id)
 
     # TODO: Consider switching return value to a namedtuple
     def get_workflow_status(self, workflow_id: str) -> tuple[WorkflowStatus, bool]:
@@ -166,8 +189,8 @@ class NextflowTowerOps(BaseOps):
         Returns:
             Workflow status and whether the workflow is done.
         """
-        workflow = self.client.get_workflow(workflow_id, self.workspace_id)
-        is_done = workflow.status.value in WorkflowStatus.terminal_states.value
+        workflow = self.get_workflow(workflow_id)
+        is_done = workflow.status in WorkflowStatus.terminal_states
         return workflow.status, is_done
 
     def list_workflows(self, search_filter: str = "") -> list[Workflow]:
