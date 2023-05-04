@@ -200,7 +200,7 @@ class NextflowTowerOps(BaseOps):
 
         previous_workflows = list()
         for workflow in workflows:
-            if workflow.projectName != launch_info.pipeline:
+            if workflow.project_name != launch_info.pipeline:
                 continue
 
             # TODO: Rename `run_name` to `unique_id` (or similar)
