@@ -20,6 +20,8 @@ class BaseOps(Generic[ConfigClass, ClientClass]):
         3) Provide values to all class variables (defined below).
         4) Provide implementations for all abstract methods.
         5) Update the type hints for attributes and class variables.
+        6) Update the config attribute to have a default factory set to
+           the config class using the `dataclasses.field()` function.
 
     Attributes:
         config: A configuration object for this service.

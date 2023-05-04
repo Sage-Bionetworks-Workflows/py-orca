@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import field
 from functools import cached_property
 from typing import Any, Optional, cast
 
@@ -23,7 +24,7 @@ class SevenBridgesOps(BaseOps):
         client_factory_class: The class for constructing clients.
     """
 
-    config: SevenBridgesConfig
+    config: SevenBridgesConfig = field(default_factory=SevenBridgesConfig)
 
     client_factory_class = SevenBridgesClientFactory
 
