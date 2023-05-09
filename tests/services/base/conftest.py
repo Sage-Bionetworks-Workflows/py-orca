@@ -4,11 +4,12 @@ from types import ModuleType
 import pytest
 from airflow.models.connection import Connection
 
-from orca.services import base, nextflowtower, sevenbridges
+from orca.services import base, nextflowtower, sevenbridges, synapse
 
 SERVICES = {
     nextflowtower: "tower://:foo@api.tower.nf/?workspace=bar/baz",
     sevenbridges: "sbg://:foo@api.sbgenomics.com/v2/?project=bar/baz",
+    synapse: "syn://:foo@",
 }
 
 
