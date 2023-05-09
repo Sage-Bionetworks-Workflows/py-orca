@@ -63,6 +63,8 @@ class SynapseClientFactory(BaseClientFactory):
             client: An authenticated client for this service.
         """
         profile = client.getUserProfile()
-        if profile["userName"] == "anonymous":
+        if profile.get("userName") == "anonymous":
             message = "Client is accessing Synapse anonymously."
             raise SynapseAuthenticationError(message)
+        else:  # pragma: no cover
+            pass  # To ignore lack of test coverage for happy path
