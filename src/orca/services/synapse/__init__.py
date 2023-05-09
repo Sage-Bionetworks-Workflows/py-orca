@@ -1,4 +1,4 @@
-"""Submodule for NextflowTower platforms (like Tower.nf)."""
+"""Submodule for Synapse."""
 
 from orca.services.synapse.client_factory import SynapseClientFactory
 from orca.services.synapse.config import SynapseConfig
