@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from dataclasses import field
 from functools import cached_property
@@ -180,18 +181,6 @@ class NextflowTowerOps(BaseOps):
         """
         return self.client.get_workflow(workflow_id, self.workspace_id)
 
-    def get_workflow_status(self, workflow_id: str) -> WorkflowStatus:
-        """Retrieve status of a workflow run.
-
-        Args:
-            workflow_id: Workflow run ID.
-
-        Returns:
-            Workflow status and whether the workflow is done.
-        """
-        workflow = self.get_workflow(workflow_id)
-        return workflow.status
-
     def list_workflows(self, search_filter: str = "") -> list[Workflow]:
         """List available workflows that match search filter.
 
@@ -261,3 +250,25 @@ class NextflowTowerOps(BaseOps):
         # Otherwise, return latest based on submission timestamp
         sorted_runs = sorted(previous_runs, key=lambda x: x.get("submit"))
         return sorted_runs[-1]
+
+    async def monitor_workflow(
+        self, run_id: str, wait_time: int = 60 * 5
+    ) -> WorkflowStatus:
+        """Wait until the workflow run completes.
+
+        Args:
+            run_id: Workflow run ID.
+            wait_time: Number of seconds to wait between checks.
+                Default is 5 minutes.
+
+        Returns:
+            Final workflow status.
+        """
+        workflow = self.get_workflow(run_id)
+        while not workflow.status.is_done:
+            logger.info(f"{workflow} is not done yet...")
+            await asyncio.sleep(wait_time)
+            workflow = self.get_workflow(run_id)
+
+        logger.info(f"{workflow} is now done!")
+        return workflow.status

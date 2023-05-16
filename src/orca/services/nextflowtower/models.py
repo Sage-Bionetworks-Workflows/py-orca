@@ -321,6 +321,10 @@ class Workflow(BaseTowerModel):
         "state": "status",
     }
 
+    def __repr__(self) -> str:
+        """String representation of a workflow."""
+        return f"Workflow(run_name={self.run_name}, id={self.id}, state={self.state})"
+
     @property
     def status(self) -> WorkflowStatus:
         """Workflow run status."""
