@@ -12,7 +12,7 @@ from orca.services.nextflowtower.utils import dedup, get_nested
 
 
 class WorkflowState(str, Enum):
-    """Valid values for the status of a Tower workflow."""
+    """Valid values for the state of a Tower workflow."""
 
     SUBMITTED = "SUBMITTED"
     RUNNING = "RUNNING"

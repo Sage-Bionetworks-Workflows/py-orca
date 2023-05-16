@@ -5,12 +5,12 @@ from functools import cached_property
 from typing import Any, Optional, cast
 
 from pydantic.dataclasses import dataclass
-from sevenbridges.models.enums import TaskStatus
 
 from orca.errors import ConfigError, UnexpectedMatchError
 from orca.services.base.ops import BaseOps
 from orca.services.sevenbridges.client_factory import SevenBridgesClientFactory
 from orca.services.sevenbridges.config import SevenBridgesConfig
+from orca.services.sevenbridges.models import TaskStatus
 
 
 @dataclass(kw_only=False)
@@ -120,7 +120,7 @@ class SevenBridgesOps(BaseOps):
         task_id = self.draft_task(name, app_id, inputs)
         return self.launch_task(task_id)
 
-    def get_task_status(self, task_id) -> tuple[TaskStatus, bool]:
+    def get_task_status(self, task_id) -> TaskStatus:
         """Retrieve the status of a task and whether it's done.
 
         Args:
@@ -130,6 +130,5 @@ class SevenBridgesOps(BaseOps):
             The task status and whether it's done.
         """
         task = self.client.tasks.get(task_id)
-        task_status = cast(TaskStatus, task.status)
-        is_done = task_status in TaskStatus.terminal_states
-        return task_status, is_done
+        status = TaskStatus(task.status)
+        return status
