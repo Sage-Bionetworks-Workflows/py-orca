@@ -134,13 +134,13 @@ class NextflowTowerOps(BaseOps):
         if not ignore_previous_runs:
             latest_run = self.get_latest_previous_workflow(launch_info)
             if latest_run:
-                status = latest_run.status.value
-                run_repr = f"{latest_run.run_name} (id='{latest_run.id}', {status=})"
+                state = latest_run.status.state
+                run_repr = f"{latest_run.run_name} (id='{latest_run.id}', {state=})"
                 # Return ID for latest run if ongoing, succeeded, or cancelled
-                if not latest_run.is_done:  # pragma: no cover
+                if not latest_run.status.is_done:  # pragma: no cover
                     logger.info(f"Found an ongoing previous run: {run_repr}")
                     return latest_run.id
-                if status in {"SUCCEEDED", "UNKNOWN"}:
+                if state in {"SUCCEEDED", "UNKNOWN"}:
                     logger.info(f"Found a previous run: {run_repr}")
                     return latest_run.id
                 launch_info.fill_in("resume", True)
@@ -180,8 +180,7 @@ class NextflowTowerOps(BaseOps):
         """
         return self.client.get_workflow(workflow_id, self.workspace_id)
 
-    # TODO: Consider switching return value to a namedtuple
-    def get_workflow_status(self, workflow_id: str) -> tuple[WorkflowStatus, bool]:
+    def get_workflow_status(self, workflow_id: str) -> WorkflowStatus:
         """Retrieve status of a workflow run.
 
         Args:
@@ -191,8 +190,7 @@ class NextflowTowerOps(BaseOps):
             Workflow status and whether the workflow is done.
         """
         workflow = self.get_workflow(workflow_id)
-        is_done = workflow.status in WorkflowStatus.terminal_states
-        return workflow.status, is_done
+        return workflow.status
 
     def list_workflows(self, search_filter: str = "") -> list[Workflow]:
         """List available workflows that match search filter.
@@ -253,7 +251,7 @@ class NextflowTowerOps(BaseOps):
             return None
 
         # First check and return any ongoing runs
-        ongoing_runs = [run for run in previous_runs if not run.is_done]
+        ongoing_runs = [run for run in previous_runs if not run.status.is_done]
         if len(ongoing_runs) > 1:  # pragma: no cover
             message = f"Multiple ongoing workflow runs: {ongoing_runs}"
             raise ValueError(message)

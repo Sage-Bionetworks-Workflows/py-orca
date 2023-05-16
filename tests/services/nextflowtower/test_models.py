@@ -1,6 +1,6 @@
 import pytest
 
-from orca.services.nextflowtower.models import LaunchInfo
+from orca.services.nextflowtower.models import LaunchInfo, WorkflowState, WorkflowStatus
 
 
 @pytest.fixture
@@ -68,3 +68,16 @@ def test_that_launch_info_can_be_serialized_with_resume_disabled(launch_info):
 def test_for_an_error_when_enabling_resume_without_session_id():
     with pytest.raises(ValueError):
         LaunchInfo(resume=True)
+
+
+def test_that_all_workflow_states_are_included():
+    states = ["SUBMITTED", "RUNNING", "SUCCEEDED", "FAILED", "CANCELLED", "UNKNOWN"]
+    for state in states:
+        assert getattr(WorkflowState, state, None) is not None
+
+
+def test_that_terminal_states_are_considered_done():
+    terminal_states = ["SUCCEEDED", "FAILED", "CANCELLED", "UNKNOWN"]
+    for state in terminal_states:
+        status = WorkflowStatus(state)
+        assert status.is_done
