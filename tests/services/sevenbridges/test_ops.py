@@ -2,6 +2,7 @@ import pytest
 
 from orca.errors import ConfigError, UnexpectedMatchError
 from orca.services.sevenbridges import SevenBridgesOps
+from orca.services.sevenbridges.models import TaskStatus
 
 
 @pytest.mark.usefixtures("patch_os_environ")
@@ -61,8 +62,10 @@ class TestWithEmptyEnv:
         draft_task_mock.assert_called_once()
         launch_task_mock.assert_called_once()
 
-    def test_that_the_client_is_used_to_get_a_task_status(self, mock_ops):
-        status, is_done = mock_ops.get_task_status("foo")
+    def test_that_the_client_is_used_to_get_a_task_status(self, mock_ops, mocker):
+        mock_task = mocker.Mock()
+        mock_task.status = "DRAFT"
+        mock_ops.client.tasks.get.return_value = mock_task
+        status = mock_ops.get_task_status("foo")
         mock_ops.client.tasks.get.assert_called_once()
-        assert status == mock_ops.client.tasks.get.return_value.status
-        assert not is_done
+        assert status == TaskStatus("DRAFT")

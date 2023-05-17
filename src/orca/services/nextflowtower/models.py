@@ -11,13 +11,8 @@ from typing_extensions import Self
 from orca.services.nextflowtower.utils import dedup, get_nested
 
 
-class WorkflowStatus(str, Enum):
-    """Valid values for the status of a Tower workflow.
-
-    Attributes:
-        terminate_states: List of status values for a workflow
-            that is no longer in progress.
-    """
+class WorkflowState(str, Enum):
+    """Valid values for the state of a Tower workflow."""
 
     SUBMITTED = "SUBMITTED"
     RUNNING = "RUNNING"
@@ -26,7 +21,18 @@ class WorkflowStatus(str, Enum):
     CANCELLED = "CANCELLED"
     UNKNOWN = "UNKNOWN"
 
-    terminal_states = [SUCCEEDED, FAILED, CANCELLED, UNKNOWN]
+
+@dataclass(kw_only=False)
+class WorkflowStatus:
+    """Workflow status and whether it's done."""
+
+    state: WorkflowState
+
+    @property
+    def is_done(self) -> bool:
+        """Whether the workflow is done irrespective of success."""
+        terminal_states = ["SUCCEEDED", "FAILED", "CANCELLED", "UNKNOWN"]
+        return self.state.value in terminal_states
 
 
 @dataclass(kw_only=False)
@@ -301,7 +307,7 @@ class Workflow(BaseTowerModel):
     username: str
     project_name: str
     work_dir: str
-    status: WorkflowStatus
+    state: WorkflowState
     params: Optional[dict[str, Any]]
     commit_id: Optional[str]
 
@@ -312,9 +318,10 @@ class Workflow(BaseTowerModel):
         "project_name": "projectName",
         "work_dir": "workDir",
         "commit_id": "commitId",
+        "state": "status",
     }
 
     @property
-    def is_done(self) -> bool:
-        """Whether the workflow is done running."""
-        return self.status in WorkflowStatus.terminal_states
+    def status(self) -> WorkflowStatus:
+        """Workflow run status."""
+        return WorkflowStatus(self.state)

@@ -138,7 +138,7 @@ def test_that_launch_workflow_works(mocked_ops, get_response, mocker):
     assert launch_info.compute_env_id == response["computeEnv"]["id"]
 
 
-def test_that_get_workflow_status_returns_expected_tuple_workflow_is_complete(
+def test_that_get_workflow_status_returns_expected_status_for_complete_workflow(
     mocker, get_response, mocked_ops
 ):
     response = get_response("get_workflow")
@@ -147,10 +147,10 @@ def test_that_get_workflow_status_returns_expected_tuple_workflow_is_complete(
     mock.get_workflow.return_value = expected
     result = mocked_ops.get_workflow_status(workflow_id="123456789")
     mock.get_workflow.assert_called_once()
-    assert result == (models.WorkflowStatus("SUCCEEDED"), True)
+    assert result == models.WorkflowStatus("SUCCEEDED")
 
 
-def test_that_get_workflow_status_returns_expected_tuple_workflow_is_not_complete(
+def test_that_get_workflow_status_returns_expected_status_for_incomplete_workflow(
     mocked_ops, mocker, get_response
 ):
     response = get_response("get_workflow")
@@ -161,7 +161,7 @@ def test_that_get_workflow_status_returns_expected_tuple_workflow_is_not_complet
     mock.get_workflow.return_value = expected
     result = mocked_ops.get_workflow_status(workflow_id="123456789")
     mock.get_workflow.assert_called_once()
-    assert result == (models.WorkflowStatus("SUBMITTED"), False)
+    assert result == models.WorkflowStatus("SUBMITTED")
 
 
 def test_that_list_workflows_filters_on_launch_label(mocked_ops, mocker):
@@ -208,7 +208,7 @@ def test_that_get_latest_previous_workflow_returns_an_ongoing_run(
     mock = mocker.patch.object(client, "get")
     mock.return_value = get_response("get_workflow")
     workflow = client.get_workflow("foo")
-    workflow.status = models.WorkflowStatus("RUNNING")
+    workflow.state = models.WorkflowState("RUNNING")
 
     launch_info = models.LaunchInfo(
         pipeline="nf-core/rnaseq",
@@ -240,7 +240,7 @@ def test_that_launch_workflow_considers_previous_runs(
     wf_mock = mocker.patch.object(client, "get")
     wf_mock.return_value = get_response("get_workflow")
     workflow = client.get_workflow("foo")
-    workflow.status = models.WorkflowStatus("FAILED")
+    workflow.state = models.WorkflowState("FAILED")
 
     latest_wf_mock = mocker.patch.object(mocked_ops, "get_latest_previous_workflow")
     latest_wf_mock.return_value = workflow
