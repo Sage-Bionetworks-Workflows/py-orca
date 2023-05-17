@@ -45,6 +45,17 @@ def test_that_a_workflow_can_be_launched(ops):
 
 
 @pytest.mark.integration
+def test_that_a_workflow_can_be_retrieved(ops):
+    launch_info = models.LaunchInfo(
+        pipeline="nextflow-io/hello",
+        run_name="test_get_workflow",
+    )
+    workflow_id = ops.launch_workflow(launch_info, "spot")
+    workflow = ops.get_workflow(workflow_id)
+    assert workflow
+
+
+@pytest.mark.integration
 def test_that_a_workflow_can_be_relaunched(ops):
     launch_info = models.LaunchInfo(
         pipeline="nextflow-io/hello",
