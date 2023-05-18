@@ -131,6 +131,15 @@ class TowerRnaseqFlow(FlowSpec):
     #   output_folder: syn51514559
     dataset_id = Parameter("dataset_id", help="Dataset Synapse ID", type=str)
 
+    def monitor_workflow(self, workflow_id):
+        """Monitor any workflow run (wait until done)."""
+        monitor_coro = self.tower.monitor_workflow(workflow_id)
+        status = asyncio.run(monitor_coro)
+        if not status.is_successful:
+            message = f"Workflow did not complete successfully ({status})."
+            raise RuntimeError(message)
+        return status
+
     @step
     def start(self):
         """Entry point."""
@@ -163,9 +172,7 @@ class TowerRnaseqFlow(FlowSpec):
     @step
     def monitor_synstage(self):
         """Monitor nf-synstage workflow run (wait until done)."""
-        monitor_coro = self.tower.monitor_workflow(self.synstage_id)
-        status = asyncio.run(monitor_coro)
-        assert status.is_successful
+        self.monitor_workflow(self.synstage_id)
         self.next(self.launch_rnaseq)
 
     @step
@@ -178,9 +185,7 @@ class TowerRnaseqFlow(FlowSpec):
     @step
     def monitor_rnaseq(self):
         """Monitor nf-core/rnaseq workflow run (wait until done)."""
-        monitor_coro = self.tower.monitor_workflow(self.rnaseq_id)
-        status = asyncio.run(monitor_coro)
-        assert status.is_successful
+        self.monitor_workflow(self.rnaseq_id)
         self.next(self.launch_synindex)
 
     @step
@@ -193,9 +198,7 @@ class TowerRnaseqFlow(FlowSpec):
     @step
     def monitor_synindex(self):
         """Monitor nf-synindex workflow run (wait until done)."""
-        monitor_coro = self.tower.monitor_workflow(self.synindex_id)
-        status = asyncio.run(monitor_coro)
-        assert status.is_successful
+        self.monitor_workflow(self.synindex_id)
         self.next(self.end)
 
     @step
