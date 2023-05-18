@@ -34,6 +34,12 @@ class WorkflowStatus:
         terminal_states = ["SUCCEEDED", "FAILED", "CANCELLED", "UNKNOWN"]
         return self.state.value in terminal_states
 
+    @property
+    def is_successful(self) -> bool:
+        """Whether the workflow is succeeded."""
+        success_states = ["SUCCEEDED"]
+        return self.state.value in success_states
+
 
 @dataclass(kw_only=False)
 class BaseTowerModel:
