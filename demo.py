@@ -39,7 +39,7 @@ class RnaseqDataset:
         """Generate run name with given suffix."""
         return f"{self.id}_{suffix}"
 
-    def synstage_info(self) -> LaunchInfo:
+    def synstage_info(self, samplesheet_uri: str) -> LaunchInfo:
         """Generate LaunchInfo for nf-synstage."""
         run_name = self.get_run_name("synstage")
         return LaunchInfo(
@@ -48,12 +48,12 @@ class RnaseqDataset:
             revision="main",
             profiles=["sage"],
             params={
-                "input": self.samplesheet,
+                "input": samplesheet_uri,
             },
             workspace_secrets=["SYNAPSE_AUTH_TOKEN"],
         )
 
-    def rnaseq_info(self, staged_samplesheet: str, outdir: str) -> LaunchInfo:
+    def rnaseq_info(self, staged_samplesheet_uri: str, outdir_uri: str) -> LaunchInfo:
         """Generate LaunchInfo for nf-core/rnaseq."""
         run_name = self.get_run_name("rnaseq")
         ref_prefix = "https://raw.githubusercontent.com/nf-core/test-datasets/rnaseq3"
@@ -73,8 +73,8 @@ class RnaseqDataset:
             profiles=["sage"],
             nextflow_config=dedent(nextflow_config),
             params={
-                "input": staged_samplesheet,
-                "outdir": outdir,
+                "input": staged_samplesheet_uri,
+                "outdir": outdir_uri,
                 "fasta": f"{ref_prefix}/reference/genome.fasta",
                 "gtf": f"{ref_prefix}/reference/genes.gtf.gz",
                 "gff": f"{ref_prefix}/reference/genes.gff.gz",
@@ -90,7 +90,7 @@ class RnaseqDataset:
             },
         )
 
-    def synindex_info(self, rnaseq_outdir: str) -> LaunchInfo:
+    def synindex_info(self, rnaseq_outdir_uri: str) -> LaunchInfo:
         """Generate LaunchInfo for nf-synindex."""
         return LaunchInfo(
             run_name=self.get_run_name("synindex"),
@@ -98,7 +98,7 @@ class RnaseqDataset:
             revision="main",
             profiles=["sage"],
             params={
-                "s3_prefix": rnaseq_outdir,
+                "s3_prefix": rnaseq_outdir_uri,
                 "parent_id": self.output_folder,
             },
             workspace_secrets=["SYNAPSE_AUTH_TOKEN"],
@@ -169,7 +169,7 @@ class TowerRnaseqFlow(FlowSpec):
     @step
     def launch_synstage(self):
         """Launch nf-synstage to stage Synapse files in samplesheet."""
-        launch_info = self.dataset.synstage_info()
+        launch_info = self.dataset.synstage_info(self.samplesheet_uri)
         self.synstage_id = self.tower.launch_workflow(launch_info, "spot")
         self.next(self.monitor_synstage)
 
