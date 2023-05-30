@@ -126,8 +126,11 @@ class TowerRnaseqFlow(FlowSpec):
 
     def get_staged_samplesheet(self, samplesheet: str) -> str:
         """Generate staged samplesheet based on synstage behavior."""
-        path = PurePosixPath(samplesheet)
-        return f"{path.parent}/synstage/{path.name}"
+        scheme, _, samplesheet_resource = samplesheet.partition("://")
+        if scheme != "s3":
+            raise ValueError("Expected an S3 URI.")
+        path = PurePosixPath(samplesheet_resource)
+        return f"{scheme}://{path.parent}/synstage/{path.name}"
 
     def monitor_workflow(self, workflow_id):
         """Monitor any workflow run (wait until done)."""
