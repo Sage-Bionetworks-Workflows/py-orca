@@ -28,3 +28,18 @@ class SynapseOps(BaseOps):
     client_factory_class = SynapseClientFactory
 
     client: ClassVar[Synapse]
+
+    def monitor_submission_view(self, view_id: str) -> bool:
+        """Monitor a submission view for completion.
+
+        Args:
+            view_id: The ID of the view to monitor.
+
+        Returns:
+            True if there are new "RECEIVED" submissions, False otherwise.
+        """
+        received_submissions = self.client.tableQuery(
+            f"select * from {view_id} where status = 'RECEIVED'"
+        )
+        recevied_rows = received_submissions.asRowSet()
+        return len(recevied_rows["rows"]) > 0
