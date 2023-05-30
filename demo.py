@@ -4,15 +4,7 @@
 py-orca demonstration script
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This script is intended to demonstrate how you can use py-orca to
-process a dataset (in this case, RNA-seq) using a series of workflow
-runs: nf-synstage, nf-core/rnaseq, and nf-synindex.
-
-This script assumes that the following environment variables are set.
-Refer to `.env.example` for the format, including examples.
-    - NEXTFLOWTOWER_CONNECTION_URI
-    - SYNAPSE_CONNECTION_URI
-    - AWS_PROFILE (or another source of AWS credentials)
+See README.md for instructions on how to run this script.
 """
 
 import asyncio
@@ -27,13 +19,17 @@ from metaflow import FlowSpec, Parameter, step
 from orca.services.nextflowtower import LaunchInfo, NextflowTowerOps
 from orca.services.synapse import SynapseOps
 
-TMPDIR_PREFIX = "s3://orca-service-test-project-tower-scratch/30days"
-OUTDIR_PREFIX = "s3://orca-service-test-project-tower-bucket/outputs"
-
 
 @dataclass
 class RnaseqDataset:
-    """RNA-seq dataset and relevant details."""
+    """RNA-seq dataset and relevant details.
+
+    Attributes:
+        id: Unique dataset identifier.
+        samplesheet: Synapse ID for nf-core/rnaseq CSV samplesheet.
+        output_folder: Synapse ID for output folder (where workflow
+            output files will be indexed).
+    """
 
     id: str
     samplesheet: str
@@ -42,11 +38,6 @@ class RnaseqDataset:
     def get_run_name(self, suffix: str) -> str:
         """Generate run name with given suffix."""
         return f"{self.id}_{suffix}"
-
-    def get_staged_samplesheet(self) -> str:
-        """Generate staged samplesheet based on synstage behavior."""
-        path = PurePosixPath(self.samplesheet)
-        return f"{path.parent}/synstage/{path.name}"
 
     def synstage_info(self) -> LaunchInfo:
         """Generate LaunchInfo for nf-synstage."""
@@ -62,7 +53,7 @@ class RnaseqDataset:
             workspace_secrets=["SYNAPSE_AUTH_TOKEN"],
         )
 
-    def rnaseq_info(self) -> LaunchInfo:
+    def rnaseq_info(self, staged_samplesheet: str, outdir: str) -> LaunchInfo:
         """Generate LaunchInfo for nf-core/rnaseq."""
         run_name = self.get_run_name("rnaseq")
         ref_prefix = "https://raw.githubusercontent.com/nf-core/test-datasets/rnaseq3"
@@ -82,8 +73,8 @@ class RnaseqDataset:
             profiles=["sage"],
             nextflow_config=dedent(nextflow_config),
             params={
-                "input": self.get_staged_samplesheet(),
-                "outdir": f"{OUTDIR_PREFIX}/{run_name}",
+                "input": staged_samplesheet,
+                "outdir": outdir,
                 "fasta": f"{ref_prefix}/reference/genome.fasta",
                 "gtf": f"{ref_prefix}/reference/genes.gtf.gz",
                 "gff": f"{ref_prefix}/reference/genes.gff.gz",
@@ -99,18 +90,15 @@ class RnaseqDataset:
             },
         )
 
-    def synindex_info(self) -> LaunchInfo:
+    def synindex_info(self, rnaseq_outdir: str) -> LaunchInfo:
         """Generate LaunchInfo for nf-synindex."""
-        rnaseq_info = self.rnaseq_info()
-        assert rnaseq_info.params
-
         return LaunchInfo(
             run_name=self.get_run_name("synindex"),
             pipeline="Sage-Bionetworks-Workflows/nf-synindex",
             revision="main",
             profiles=["sage"],
             params={
-                "s3_prefix": rnaseq_info.params["outdir"],
+                "s3_prefix": rnaseq_outdir,
                 "parent_id": self.output_folder,
             },
             workspace_secrets=["SYNAPSE_AUTH_TOKEN"],
@@ -124,12 +112,22 @@ class TowerRnaseqFlow(FlowSpec):
     synapse = SynapseOps()
     s3 = s3fs.S3FileSystem()
 
-    # Synapse ID for a YAML file that describes an RNA-seq dataset
-    # Here's an example:
-    #   id: my_test_dataset
-    #   samplesheet: syn51514475
-    #   output_folder: syn51514559
-    dataset_id = Parameter("dataset_id", help="Dataset Synapse ID", type=str)
+    dataset_id = Parameter(
+        "dataset_id",
+        type=str,
+        help="Synapse ID for a YAML file describing an RNA-seq dataset",
+    )
+
+    s3_prefix = Parameter(
+        "s3_prefix",
+        type=str,
+        help="S3 prefix for storing output files from different runs",
+    )
+
+    def get_staged_samplesheet(self, samplesheet: str) -> str:
+        """Generate staged samplesheet based on synstage behavior."""
+        path = PurePosixPath(samplesheet)
+        return f"{path.parent}/synstage/{path.name}"
 
     def monitor_workflow(self, workflow_id):
         """Monitor any workflow run (wait until done)."""
@@ -151,15 +149,21 @@ class TowerRnaseqFlow(FlowSpec):
         with self.synapse.fs.open(self.dataset_id, "r") as fp:
             kwargs = yaml.safe_load(fp)
         self.dataset = RnaseqDataset(**kwargs)
+        self.next(self.get_rnaseq_outdir)
+
+    @step
+    def get_rnaseq_outdir(self):
+        """Generate output directory for nf-core/rnaseq."""
+        run_name = self.dataset.get_run_name("rnaseq")
+        self.rnaseq_outdir = f"{self.s3_prefix}/{run_name}"
         self.next(self.transfer_samplesheet_to_s3)
 
     @step
     def transfer_samplesheet_to_s3(self):
         """Transfer raw samplesheet from Synapse to Tower S3 bucket."""
-        sheet_uri = f"{TMPDIR_PREFIX}/{self.dataset.id}.csv"
+        self.samplesheet_uri = f"{self.s3_prefix}/{self.dataset.id}.csv"
         sheet_contents = self.synapse.fs.readtext(self.dataset.samplesheet)
-        self.s3.write_text(sheet_uri, sheet_contents)
-        self.dataset.samplesheet = sheet_uri
+        self.s3.write_text(self.samplesheet_uri, sheet_contents)
         self.next(self.launch_synstage)
 
     @step
@@ -178,7 +182,8 @@ class TowerRnaseqFlow(FlowSpec):
     @step
     def launch_rnaseq(self):
         """Launch nf-core/rnaseq workflow to process RNA-seq data."""
-        launch_info = self.dataset.rnaseq_info()
+        staged_uri = self.get_staged_samplesheet(self.samplesheet_uri)
+        launch_info = self.dataset.rnaseq_info(staged_uri, self.rnaseq_outdir)
         self.rnaseq_id = self.tower.launch_workflow(launch_info, "spot")
         self.next(self.monitor_rnaseq)
 
@@ -191,7 +196,7 @@ class TowerRnaseqFlow(FlowSpec):
     @step
     def launch_synindex(self):
         """Launch nf-synindex to index S3 files back into Synapse."""
-        launch_info = self.dataset.synindex_info()
+        launch_info = self.dataset.synindex_info(self.rnaseq_outdir)
         self.synindex_id = self.tower.launch_workflow(launch_info, "spot")
         self.next(self.monitor_synindex)
 
