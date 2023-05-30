@@ -29,17 +29,15 @@ class SynapseOps(BaseOps):
 
     client: ClassVar[Synapse]
 
-    def monitor_submission_view(self, view_id: str) -> bool:
-        """Monitor a submission view for completion.
+    def monitor_evaluation_queue(self, evaluation_id: str) -> bool:
+        """Monitor an evaluation queue in Synapse.
 
         Args:
-            view_id: The ID of the view to monitor.
+            evaluation_id: The Synapse ID of the queue to monitor.
 
         Returns:
-            True if there are new "RECEIVED" submissions, False otherwise.
+            True if there are "RECEIVED" submissions, False otherwise.
         """
-        received_submissions = self.client.tableQuery(
-            f"select * from {view_id} where status = 'RECEIVED'"
-        )
-        recevied_rows = received_submissions.asRowSet()
-        return len(recevied_rows["rows"]) > 0
+        received_submissions = syn.getSubmissionBundles(evaluation_id, status="RECEIVED")
+        submissions_num = sum(1 for submission in received_submissions)
+        return submissions_num > 0
