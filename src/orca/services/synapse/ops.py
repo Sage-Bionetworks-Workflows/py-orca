@@ -38,6 +38,8 @@ class SynapseOps(BaseOps):
         Returns:
             True if there are "RECEIVED" submissions, False otherwise.
         """
-        received_submissions = syn.getSubmissionBundles(evaluation_id, status="RECEIVED")
+        received_submissions = self.client.getSubmissionBundles(
+            evaluation_id, status="RECEIVED"
+        )
         submissions_num = sum(1 for submission in received_submissions)
         return submissions_num > 0
