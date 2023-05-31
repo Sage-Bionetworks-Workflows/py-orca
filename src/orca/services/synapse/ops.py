@@ -42,3 +42,18 @@ class SynapseOps(BaseOps):
             raise ConfigError(message)
 
         return SynapseFS(auth_token=auth_token)
+
+    def monitor_evaluation_queue(self, evaluation_id: str) -> bool:
+        """Monitor an evaluation queue in Synapse.
+
+        Args:
+            evaluation_id: The Synapse ID of the queue to monitor.
+
+        Returns:
+            True if there are "RECEIVED" submissions, False otherwise.
+        """
+        received_submissions = self.client.getSubmissionBundles(
+            evaluation_id, status="RECEIVED"
+        )
+        submissions_num = sum(1 for submission in received_submissions)
+        return submissions_num > 0
