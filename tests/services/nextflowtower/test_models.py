@@ -81,3 +81,10 @@ def test_that_terminal_states_are_considered_done():
     for state in terminal_states:
         status = WorkflowStatus(state)
         assert status.is_done
+
+
+def test_that_successful_states_are_considered_successful():
+    terminal_states = ["SUCCEEDED"]
+    for state in terminal_states:
+        status = WorkflowStatus(state)
+        assert status.is_successful
