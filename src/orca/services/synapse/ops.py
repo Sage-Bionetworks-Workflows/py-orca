@@ -31,7 +31,7 @@ class SynapseOps(BaseOps):
     client_factory_class = SynapseClientFactory
 
     client: ClassVar[Synapse]
-      
+
     @cached_property
     def fs(self) -> SynapseFS:
         """Synapse file system."""
@@ -43,7 +43,6 @@ class SynapseOps(BaseOps):
 
         return SynapseFS(auth_token=auth_token)
 
-   
     def monitor_evaluation_queue(self, evaluation_id: str) -> bool:
         """Monitor an evaluation queue in Synapse.
 
@@ -58,4 +57,3 @@ class SynapseOps(BaseOps):
         )
         submissions_num = sum(1 for submission in received_submissions)
         return submissions_num > 0
-

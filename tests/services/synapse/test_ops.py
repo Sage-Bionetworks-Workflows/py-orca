@@ -11,7 +11,7 @@ def test_for_an_error_when_accessing_fs_without_credentials(
     with pytest.raises(ConfigError):
         ops.fs.listdir(syn_project_id)
 
-        
+
 def test_monitor_evaluation_queue_returns_false_when_there_are_no_new_submissions(
     mocker, mocked_ops
 ):
@@ -34,4 +34,3 @@ def test_monitor_evaluation_queue_returns_true_when_there_are_new_submissions(
     result = mocked_ops.monitor_evaluation_queue("foo")
     mock.assert_called_once_with("foo", status="RECEIVED")
     assert result
-
