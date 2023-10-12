@@ -167,6 +167,7 @@ class LaunchInfo(BaseTowerModel):
     label_ids: list[int] = field(default_factory=list)
     resume: bool = False
     session_id: Optional[str] = None
+    entry_name: Optional[str] = ""
 
     @root_validator()
     def check_resume_and_session_id(cls, values: dict[str, Any]):
@@ -223,7 +224,7 @@ class LaunchInfo(BaseTowerModel):
             "configProfiles": dedup(self.profiles),
             "configText": self.nextflow_config,
             "dateCreated": None,
-            "entryName": None,
+            "entryName": self.get("entry_name"),
             "headJobCpus": None,
             "headJobMemoryMb": None,
             "id": None,
