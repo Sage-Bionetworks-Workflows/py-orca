@@ -52,7 +52,10 @@ jobs:
           name: python-distribution-files
           path: dist/
           retention-days: 1
-
+        # Prevent scheduled workflow from ever being paused
+      - name: Keepalive Workflow
+        uses: gautamkrishnar/keepalive-workflow@1.1.0
+                    
   test:
     needs: prepare
     strategy:
