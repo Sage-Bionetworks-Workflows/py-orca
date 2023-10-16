@@ -55,6 +55,8 @@ jobs:
         # Prevent scheduled workflow from ever being paused
       - name: Keepalive Workflow
         uses: gautamkrishnar/keepalive-workflow@1.1.0
+        with:
+          time_elapsed: 44
 
 
   test:
