@@ -145,7 +145,7 @@ jobs:
             type=ref,event=branch
             type=sha
       - name: Publish Python Package to Docker Hub and GHCR
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v3
         with:
           platforms: linux/amd64,linux/arm64
           context: .
