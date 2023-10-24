@@ -272,3 +272,26 @@ class NextflowTowerOps(BaseOps):
 
         logger.info(f"{workflow} is now done!")
         return workflow.status
+
+    def get_workflow_tasks(self, workflow_id: str) -> list[dict]:
+        """Retrieve the details of a workflow run's tasks.
+
+        Args:
+            workflow_id: Workflow run ID.
+
+        Returns:
+            List of task details.
+        """
+        return self.client.get_workflow_tasks(workflow_id, self.workspace_id)
+
+    def get_task_logs(self, workflow_id: str, task_id: str) -> str:
+        """Retrieve the execution logs for a given workflow task.
+
+        Args:
+            workflow_id: Workflow run ID.
+            task_id: Task ID.
+
+        Returns:
+            Task logs.
+        """
+        return self.client.get_task_logs(workflow_id, task_id, self.workspace_id)
