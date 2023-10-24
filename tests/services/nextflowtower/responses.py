@@ -528,7 +528,7 @@ list_workflows = {
     "totalSize": 3,
 }
 
-list_workflow_tasks = {
+get_workflow_tasks = {
     "tasks": [
         {
             "task": {
@@ -748,9 +748,7 @@ list_workflow_tasks = {
 
 get_task_log = {
     "log": {
-        "entries": [
-            "Ciao world!"
-        ],
+        "entries": ["Ciao world!"],
         "rewindToken": None,
         "forwardToken": None,
         "pending": False,
@@ -759,19 +757,19 @@ get_task_log = {
             {
                 "fileName": ".command.out",
                 "displayText": "Task stdout",
-                "saveName": "task-2.command.out.txt"
+                "saveName": "task-2.command.out.txt",
             },
             {
                 "fileName": ".command.err",
                 "displayText": "Task stderr",
-                "saveName": "task-2.command.err.txt"
+                "saveName": "task-2.command.err.txt",
             },
             {
                 "fileName": ".command.log",
                 "displayText": "Task log file",
-                "saveName": "task-2.command.log.txt"
-            }
+                "saveName": "task-2.command.log.txt",
+            },
         ],
-        "truncated": False
+        "truncated": False,
     }
 }
