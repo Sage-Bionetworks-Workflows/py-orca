@@ -11,7 +11,12 @@ from orca.services.base.ops import BaseOps
 from orca.services.nextflowtower.client import NextflowTowerClient
 from orca.services.nextflowtower.client_factory import NextflowTowerClientFactory
 from orca.services.nextflowtower.config import NextflowTowerConfig
-from orca.services.nextflowtower.models import LaunchInfo, Workflow, WorkflowStatus
+from orca.services.nextflowtower.models import (
+    LaunchInfo,
+    Workflow,
+    WorkflowStatus,
+    WorkflowTask,
+)
 from orca.services.nextflowtower.utils import increment_suffix
 
 logger = logging.getLogger(__name__)
@@ -273,7 +278,7 @@ class NextflowTowerOps(BaseOps):
         logger.info(f"{workflow} is now done!")
         return workflow.status
 
-    def get_workflow_tasks(self, workflow_id: str) -> list[dict]:
+    def get_workflow_tasks(self, workflow_id: str) -> list[WorkflowTask]:
         """Retrieve the details of a workflow run's tasks.
 
         Args:
