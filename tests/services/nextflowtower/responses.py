@@ -746,7 +746,7 @@ get_workflow_tasks = {
     "total": 4,
 }
 
-get_task_log = {
+get_task_logs = {
     "log": {
         "entries": ["Ciao world!"],
         "rewindToken": None,
