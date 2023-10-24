@@ -369,3 +369,47 @@ class NextflowTowerClient:
         json = self.get(path=path, params=params)
         items = self.unwrap(json, "workflows")
         return [models.Workflow.from_json(item["workflow"]) for item in items]
+
+    def get_workflow_tasks(
+        self,
+        workflow_id: str,
+        workspace_id: Optional[int] = None,
+    ) -> list[models.WorkflowTask]:
+        """Retrieve the details of a workflow run's tasks.
+
+        Args:
+            workflow_id: The ID number for a workflow run to
+            get tasks from.
+            workspace_id: The ID number of the workspace the workflow
+                exists within. Defaults to None.
+
+        Returns:
+            List of WorkflowTask objects.
+        """
+        path = f"/workflow/{workflow_id}/tasks"
+        params = self.generate_params(workspace_id)
+        json = self.get(path=path, params=params)
+        items = self.unwrap(json, "tasks")
+        return [models.WorkflowTask.from_json(item["task"]) for item in items]
+
+    def get_task_logs(
+        self, workflow_id: str, task_id: str, workspace_id: Optional[int]
+    ) -> str:
+        """Retrieve the logs for a given workflow task.
+
+        Args:
+            workflow_id: The ID number for a workflow run the
+            tasks belongs to.
+            task_id: The task_id for the task to get logs from.
+            workspace_id: The ID number of the workspace the workflow
+                exists within. Defaults to None.
+
+        Returns:
+            WorkflowTask Execution logs.
+        """
+        path = f"/workflow/{workflow_id}/log/{task_id}"
+        params = self.generate_params(workspace_id)
+        json = self.get(path=path, params=params)
+        items = self.unwrap(json, "log")
+        log_list = items["entries"]
+        return "\n".join(log_list)
