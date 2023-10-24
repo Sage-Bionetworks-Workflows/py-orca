@@ -336,3 +336,73 @@ class Workflow(BaseTowerModel):
     def status(self) -> WorkflowStatus:
         """Workflow run status."""
         return WorkflowStatus(self.state)
+
+
+@dataclass(kw_only=False)
+class WorkflowTask(BaseTowerModel):
+    """Nextflow Tower workflow task details."""
+
+    {
+        "id": 4638140,
+        "taskId": 1,
+        "status": "COMPLETED",
+        "name": "sayHello (1)",
+        "module": [],
+        "queue": "TowerForge-5im9knMLfGTl9qrPNcDk0t-work",
+        "memory": None,
+        "script": "\necho 'Bonjour world!'\n",
+        "tag": None,
+        "executor": "awsbatch",
+        "duration": 178310,
+        "container": "wave.seqera.io/wt/35bcf310401b/nextflow/bash:latest",
+        "process": "sayHello",
+        "attempt": 1,
+        "scratch": None,
+        "workdir": "s3://example-project-tower-scratch/work/53/d1a4bedd867b9b005c1e86291334cf",
+        "disk": None,
+        "priceModel": "spot",
+        "cost": 5.76389e-05,
+        "errorAction": None,
+        "nativeId": "1ffe9499-1566-4140-b652-cb930413cf77",
+        "env": None,
+        "exitStatus": 0,
+        "cpus": 1,
+        "machineType": "c6i.2xlarge",
+        "hash": "53/d1a4be",
+    }
+    id: int
+    task_id: int
+    status: str
+    name: str
+    module: list[str]
+    queue: str
+    memory: Optional[int]
+    script: str
+    tag: Optional[str]
+    executor: str
+    duration: int
+    container: str
+    process: str
+    attempt: int
+    scratch: Optional[str]
+    work_dir: str
+    disk: Optional[int]
+    price_model: str
+    cost: float
+    error_action: Optional[str]
+    native_id: str
+    env: Optional[str]
+    exit_status: int
+    cpus: Optional[int]
+    machine_type: str
+    hash: str
+
+    _key_mapping = {
+        "task_id": "taskId",
+        "work_dir": "workdir",
+        "price_model": "priceModel",
+        "error_action": "errorAction",
+        "native_id": "nativeId",
+        "exit_status": "exitStatus",
+        "machine_type": "machineType",
+    }
