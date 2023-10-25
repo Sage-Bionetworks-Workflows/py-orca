@@ -7,6 +7,9 @@ from orca.services.nextflowtower import NextflowTowerOps
 
 
 class LogsFlow(FlowSpec):
+    """Retrieve execution logs and failure reasons for all
+    failed tasks in a workflow."""
+
     tower = NextflowTowerOps()
 
     workflow_id = Parameter(
@@ -15,7 +18,7 @@ class LogsFlow(FlowSpec):
         help="Nextflow workflow ID",
     )
 
-    # Example error reasons for the nf-histoqc workflow
+    # Example error reasons for nf-histoqc
     log_reasons = [
         "NO tissue remains detectable!",
         "NO tissue remains detectable in mask!",
@@ -34,11 +37,14 @@ class LogsFlow(FlowSpec):
         }
 
     async def retrieve_workflow_task_logs(self):
-        """Asynchronously retrieve execution logs for all tasks in a workflow."""
+        """Asynchronously retrieve execution logs for all failed tasks in a workflow."""
         print("Getting workflow tasks")
         tasks = self.tower.get_workflow_tasks(workflow_id=self.workflow_id)
-        print("Getting logs for each task")
-        task_log_list = await asyncio.gather(*[self.get_logs(task) for task in tasks])
+        failed_tasks = [task for task in tasks if task.status == "FAILED"]
+        print("Getting logs for each failed task")
+        task_log_list = await asyncio.gather(
+            *[self.get_logs(task) for task in failed_tasks]
+        )
         return task_log_list
 
     def determine_failure_reasons(self, task_log_list):
@@ -61,7 +67,7 @@ class LogsFlow(FlowSpec):
 
     @step
     def get_task_logs(self):
-        """Collect all task logs for a workflow."""
+        """Collect task logs for a workflow."""
         self.task_log_list = asyncio.run(self.retrieve_workflow_task_logs())
         self.next(self.compile_failure_reasons)
 
