@@ -1,7 +1,8 @@
 import asyncio
 
-from metaflow import FlowSpec, Parameter, step
 import pandas as pd
+from metaflow import FlowSpec, Parameter, step
+
 from orca.services.nextflowtower import NextflowTowerOps
 
 
@@ -41,7 +42,8 @@ class LogsFlow(FlowSpec):
         return task_log_list
 
     def determine_failure_reasons(self, task_log_list):
-        """Check for failure reasons in execution logs. Attribute failure reasons to each task."""
+        """Check for failure reasons in execution logs.
+        Attribute failure reasons to each task."""
         for task in task_log_list:
             failure_reasons = []
             for reason in self.log_reasons:
