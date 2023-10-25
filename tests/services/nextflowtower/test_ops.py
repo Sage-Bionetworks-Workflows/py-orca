@@ -317,7 +317,6 @@ def test_that_get_workflow_tasks_works(mocked_ops, mocker, get_response, client)
 
 
 def test_that_get_task_logs_works(mocked_ops, mocker, get_response):
-    response = get_response("get_task_logs")
     expected = "Ciao world!"
     mock = mocker.patch.object(mocked_ops.client, "get_task_logs")
     mock.return_value = expected
