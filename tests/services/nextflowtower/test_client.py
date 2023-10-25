@@ -155,7 +155,6 @@ def test_that_get_workflow_tasks_works(client, mocker, get_response):
     mock.return_value = get_response("get_workflow_tasks")
     result = client.get_workflow_tasks(workspace_id=98765, workflow_id="123456789")
     mock.assert_called()
-    print(result)
     assert len(result) == 4
 
 

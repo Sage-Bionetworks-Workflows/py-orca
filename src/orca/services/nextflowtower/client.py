@@ -113,7 +113,9 @@ class NextflowTowerClient:
         while num_items < total_size:
             kwargs["params"]["offset"] = num_items
             json = self.request_json(method, path, **kwargs)
-            total_size = json.pop("totalSize")
+            total_size = (
+                json.pop("totalSize") if json.get("totalSize") else json.pop("total")
+            )
             key_name, items = json.popitem()
             num_items += len(items)
             all_items.extend(items)
@@ -134,7 +136,7 @@ class NextflowTowerClient:
             A dictionary from deserializing the JSON response.
         """
         json = self.request_json("GET", path, **kwargs)
-        if "totalSize" in json:
+        if "totalSize" in json or "total" in json:
             json = self.request_paged("GET", path, **kwargs)
         return json
 
