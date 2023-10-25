@@ -1,9 +1,11 @@
 import asyncio
+from typing import List
 
 import pandas as pd
 from metaflow import FlowSpec, Parameter, step
 
 from orca.services.nextflowtower import NextflowTowerOps
+from orca.services.nextflowtower.models import WorkflowTask
 
 
 class LogsFlow(FlowSpec):
@@ -25,7 +27,7 @@ class LogsFlow(FlowSpec):
         "Inappropriate argument value (of correct type)",
     ]
 
-    async def get_logs(self, task):
+    async def get_logs(self, task: WorkflowTask):
         """Retrieve execution logs for an individual task."""
         print(f"Getting logs for task: {task.task_id}")
         return {
@@ -47,7 +49,7 @@ class LogsFlow(FlowSpec):
         )
         return task_log_list
 
-    def determine_failure_reasons(self, task_log_list):
+    def determine_failure_reasons(self, task_log_list: List[dict]):
         """Check for failure reasons in execution logs.
         Attribute failure reasons to each task."""
         for task in task_log_list:

@@ -395,7 +395,7 @@ class NextflowTowerClient:
         return [models.WorkflowTask.from_json(item["task"]) for item in items]
 
     def get_task_logs(
-        self, workflow_id: str, task_id: str, workspace_id: Optional[int]
+        self, workflow_id: str, task_id: int, workspace_id: Optional[int]
     ) -> str:
         """Retrieve the logs for a given workflow task.
 

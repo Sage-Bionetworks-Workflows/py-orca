@@ -289,7 +289,7 @@ class NextflowTowerOps(BaseOps):
         """
         return self.client.get_workflow_tasks(workflow_id, self.workspace_id)
 
-    def get_task_logs(self, workflow_id: str, task_id: str) -> str:
+    def get_task_logs(self, workflow_id: str, task_id: int) -> str:
         """Retrieve the execution logs for a given workflow task.
 
         Args:
