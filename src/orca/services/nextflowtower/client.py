@@ -113,13 +113,7 @@ class NextflowTowerClient:
         while num_items < total_size:
             kwargs["params"]["offset"] = num_items
             json = self.request_json(method, path, **kwargs)
-            total_size = (
-                json.pop("totalSize")
-                if json.get("totalSize") is not None
-                else json.pop("total")
-                if json.get("total") is not None
-                else 0
-            )
+            total_size = json.pop("totalSize", None) or json.pop("total", 0)
             key_name, items = json.popitem()
             num_items += len(items)
             all_items.extend(items)
