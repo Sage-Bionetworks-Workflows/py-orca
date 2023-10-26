@@ -302,3 +302,24 @@ async def test_that_monitor_workflow_works_for_an_incomplete_workflow(
 
     assert mock.call_count > 1
     assert result == models.WorkflowStatus("SUCCEEDED")
+
+
+def test_that_get_workflow_tasks_works(mocked_ops, mocker, get_response, client):
+    response = get_response("get_workflow_tasks")
+    expected = [
+        models.WorkflowTask.from_json(task["task"]) for task in response["tasks"]
+    ]
+    mock = mocker.patch.object(mocked_ops.client, "get_workflow_tasks")
+    mock.return_value = expected
+    result = mocked_ops.get_workflow_tasks(workflow_id="123456789")
+    mock.assert_called()
+    assert expected == result
+
+
+def test_that_get_task_logs_works(mocked_ops, mocker, get_response):
+    expected = "Ciao world!"
+    mock = mocker.patch.object(mocked_ops.client, "get_task_logs")
+    mock.return_value = expected
+    result = mocked_ops.get_task_logs(task_id=1, workflow_id="123456789")
+    mock.assert_called()
+    assert result == "Ciao world!"

@@ -148,3 +148,21 @@ def test_that_list_workflows_works(client, mocker, get_response):
     result = client.list_workflows()
     mock.assert_called()
     assert len(result) == 3
+
+
+def test_that_get_workflow_tasks_works(client, mocker, get_response):
+    mock = mocker.patch.object(client, "request_json")
+    mock.return_value = get_response("get_workflow_tasks")
+    result = client.get_workflow_tasks(workspace_id=98765, workflow_id="123456789")
+    mock.assert_called()
+    assert len(result) == 4
+
+
+def test_that_get_task_logs_works(client, mocker, get_response):
+    mock = mocker.patch.object(client, "request_json")
+    mock.return_value = get_response("get_task_logs")
+    result = client.get_task_logs(
+        workspace_id=98765, task_id=1, workflow_id="123456789"
+    )
+    mock.assert_called()
+    assert result == "Ciao world!"

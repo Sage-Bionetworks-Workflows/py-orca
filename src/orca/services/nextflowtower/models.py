@@ -336,3 +336,45 @@ class Workflow(BaseTowerModel):
     def status(self) -> WorkflowStatus:
         """Workflow run status."""
         return WorkflowStatus(self.state)
+
+
+@dataclass(kw_only=False)
+class WorkflowTask(BaseTowerModel):
+    """Nextflow Tower workflow task details."""
+
+    id: int
+    task_id: int
+    status: str
+    name: str
+    module: list[str]
+    queue: str
+    memory: Optional[int]
+    script: str
+    tag: Optional[str]
+    executor: str
+    duration: int
+    container: str
+    process: str
+    attempt: int
+    scratch: Optional[str]
+    work_dir: str
+    disk: Optional[int]
+    price_model: str
+    cost: float
+    error_action: Optional[str]
+    native_id: str
+    env: Optional[str]
+    exit_status: int
+    cpus: Optional[int]
+    machine_type: str
+    hash: str
+
+    _key_mapping = {
+        "task_id": "taskId",
+        "work_dir": "workdir",
+        "price_model": "priceModel",
+        "error_action": "errorAction",
+        "native_id": "nativeId",
+        "exit_status": "exitStatus",
+        "machine_type": "machineType",
+    }
