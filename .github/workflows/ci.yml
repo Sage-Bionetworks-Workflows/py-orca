@@ -36,8 +36,10 @@ jobs:
         with: {python-version: "3.11"}
       - name: Run static analysis and format checkers
         run: pipx run pre-commit run --all-files --show-diff-on-failure
+      - name: Install tox-gh plugin
+        run: python -m pip install tox-gh>=1.2
       - name: Build package distribution files
-        run: pipx run --spec 'tox~=3.0' tox -e clean,build
+        run: tox -e clean,build
       - name: Record the paths of wheel and source tarball distributions
         id: distribution-paths
         run: |
