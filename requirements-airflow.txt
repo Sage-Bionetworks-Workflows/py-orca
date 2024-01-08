@@ -1,0 +1,2 @@
+-c https://raw.githubusercontent.com/apache/airflow/constraints-2.7.2/constraints-3.10.txt
+apache-airflow==2.7.2
