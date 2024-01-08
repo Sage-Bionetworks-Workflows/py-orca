@@ -109,6 +109,8 @@ This often provides additional considerations and avoids unnecessary work.
    source py-orca-venv-<your_python_version>/bin/activate
    ```
 
+   **Note:** `py-orca` currently supports Python versions >=3.10 and <3.12.
+
 5. Install [pre-commit] hooks:
 
    ```

@@ -61,6 +61,6 @@ MANIFEST
 # Metaflow files
 .metaflow
 
-# Virtual Environment Files
+# Virtual Environment Directories
 /venv
 /py-orca-venv-*
