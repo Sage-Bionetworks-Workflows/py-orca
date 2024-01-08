@@ -105,11 +105,11 @@ This often provides additional considerations and avoids unnecessary work.
    including those needed for development (*e.g.* testing, documentation) by running:
 
    ```console
-   ./dev_setup.sh <your_python_version>
-   source py-orca-venv-<your_python_version>/bin/activate
+   ./dev_setup.sh 3.10
+   source py-orca-venv-3.10/bin/activate
    ```
 
-   **Note:** `py-orca` currently supports Python versions >=3.10 and <3.12.
+   **Note:** `py-orca` also supports Python version 3.11.
 
 5. Install [pre-commit] hooks:
 
