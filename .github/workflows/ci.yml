@@ -38,22 +38,22 @@ jobs:
         run: pipx run pre-commit run --all-files --show-diff-on-failure
       - name: Install tox-gh plugin
         run: python -m pip install tox-gh>=1.2
-      # - name: Build package distribution files
-      #   run: tox -e clean,build
-      # - name: Record the paths of wheel and source tarball distributions
-      #   id: distribution-paths
-      #   run: |
-      #     echo "wheel=$(ls dist/*.whl)" >> $GITHUB_OUTPUT
-      #     echo "tarball=$(ls dist/*.tar.gz)" >> $GITHUB_OUTPUT
-      # - name: Store the distribution files for use in other stages
-      #   # `tests`, `pypi-publish`, and `docker-publish` will use the same
-      #   # pre-built distributions, so we make sure to release the exact
-      #   # same package that was tested
-      #   uses: actions/upload-artifact@v3
-      #   with:
-      #     name: python-distribution-files
-      #     path: dist/
-      #     retention-days: 1
+      - name: Build package distribution files
+        run: tox -e clean,build
+      - name: Record the paths of wheel and source tarball distributions
+        id: distribution-paths
+        run: |
+          echo "wheel=$(ls dist/*.whl)" >> $GITHUB_OUTPUT
+          echo "tarball=$(ls dist/*.tar.gz)" >> $GITHUB_OUTPUT
+      - name: Store the distribution files for use in other stages
+        # `tests`, `pypi-publish`, and `docker-publish` will use the same
+        # pre-built distributions, so we make sure to release the exact
+        # same package that was tested
+        uses: actions/upload-artifact@v3
+        with:
+          name: python-distribution-files
+          path: dist/
+          retention-days: 1
         # Prevent scheduled workflow from ever being paused
       - name: Keepalive Workflow
         uses: gautamkrishnar/keepalive-workflow@1.1.0
