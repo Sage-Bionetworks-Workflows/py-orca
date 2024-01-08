@@ -1,6 +1,6 @@
 # Contributing
 
-Welcome to `orca` contributor's guide.
+Welcome to `py-orca` contributor's guide.
 
 This document focuses on getting any potential contributor familiarized with
 the development processes, but [other kinds of contributions] are also appreciated.
@@ -16,7 +16,7 @@ behavior guidelines.
 
 ## Issue Reports
 
-If you experience bugs or general issues with `orca`, please have a look
+If you experience bugs or general issues with `py-orca`, please have a look
 on the [issue tracker].
 If you don't see anything useful there, please feel free to fire an issue report.
 
@@ -34,17 +34,17 @@ you help us to identify the root cause of the issue.
 
 ## Documentation Improvements
 
-You can help improve `orca` docs by making them more readable and coherent, or
+You can help improve py-`orca` docs by making them more readable and coherent, or
 by adding missing information and correcting mistakes.
 
-`orca` documentation uses [Sphinx] as its main documentation compiler.
+`py-orca` documentation uses [Sphinx] as its main documentation compiler.
 This means that the docs are kept in the same repository as the project code, and
 that any documentation update is done in the same way was a code contribution.
 The documentation is written using [CommonMark] with [MyST] extensions.
 
 :::{tip}
    Please notice that the [GitHub web interface] provides a quick way of
-   propose changes in `orca`'s files. While this mechanism can
+   propose changes in `py-orca`'s files. While this mechanism can
    be tricky for normal code contributions, it works perfectly fine for
    contributing to the docs, and can be quite handy.
 
@@ -87,7 +87,7 @@ Before you work on any non-trivial code contribution it's best to first create
 a report in the [issue tracker] to start a discussion on the subject.
 This often provides additional considerations and avoids unnecessary work.
 
-### Clone the repository
+### Development Environment Setup
 
 1. Create an user account on GitHub if you do not already have one.
 
@@ -98,18 +98,20 @@ This often provides additional considerations and avoids unnecessary work.
 
    ```console
    git clone git@github.com:Sage-Bionetworks-Workflows/py-orca.git
-   cd orca
+   cd py-orca
    ```
 
 4. Create an isolated virtual environment containing package dependencies,
    including those needed for development (*e.g.* testing, documentation) by running:
 
    ```console
-   ./dev_setup.sh 3.10
-   source py-orca-venv-3.10/bin/activate
+   ./dev_setup.sh <your_supported_python_version>
+   source py-orca-venv-<your_supported_python_version>/bin/activate
    ```
 
-   **Note:** `py-orca` also supports Python version 3.11.
+   **Note:**
+   Ensure that you have a supported Python version installed on your local machine before running `dev_setup.sh`. `py-orca` currently supports Python version 3.10 and 3.11. You can [install](https://github.com/pyenv/pyenv?tab=readme-ov-file#installation) `pyenv`for easy Python version management.
+
 
 5. Install [pre-commit] hooks:
 
