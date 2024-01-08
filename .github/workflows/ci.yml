@@ -87,7 +87,7 @@ jobs:
       - name: Setup test suite
         run: tox -vv --notest
       - name: Install dependencies
-        run: ./dev_setup.sh {{{ matrix.python }}}
+        run: ./dev_setup.sh ${{ matrix.python }}
       - name: Run tests
         env:
           # New variables should match a `passenv` pattern under `[testenv]` in tox.ini
