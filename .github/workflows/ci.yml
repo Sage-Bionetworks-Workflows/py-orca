@@ -80,26 +80,23 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python }}
-      # - uses: actions/download-artifact@v3
-      #   with: {name: python-distribution-files, path: dist/}
-      # - name: Install tox-gh plugin
-      #   run: python -m pip install tox-gh>=1.2
-      # - name: Setup test suite
-      #   run: tox -vv --notest
-      - name: Install pipenv
-        run: python -m pip install pipenv
+      - uses: actions/download-artifact@v3
+        with: {name: python-distribution-files, path: dist/}
+      - name: Install tox-gh plugin
+        run: python -m pip install tox-gh>=1.2
+      - name: Setup test suite
+        run: tox -vv --notest
       - name: Install dependencies
-        run: pipenv install -d
+        run: ./dev_setup.sh {{{ matrix.python }}}
       - name: Run tests
         env:
           # New variables should match a `passenv` pattern under `[testenv]` in tox.ini
           SEVENBRIDGES_CONNECTION_URI: ${{ secrets.SEVENBRIDGES_CONNECTION_URI }}
           NEXTFLOWTOWER_CONNECTION_URI: ${{ secrets.NEXTFLOWTOWER_CONNECTION_URI }}
           SYNAPSE_CONNECTION_URI: ${{ secrets.SYNAPSE_CONNECTION_URI }}
-        run: pipenv run pytest -vvv
-          # >-
-          #   tox --installpkg '${{ needs.prepare.outputs.wheel-path }}'
-          #   -- -rFEx --durations 10 --color yes
+        run: >-
+            tox --installpkg '${{ needs.prepare.outputs.wheel-path }}'
+            -- -rFEx --durations 10 --color yes
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
