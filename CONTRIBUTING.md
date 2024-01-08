@@ -101,19 +101,18 @@ This often provides additional considerations and avoids unnecessary work.
    cd orca
    ```
 
-4. Install `pipx` to easily run Python CLI tools like `tox` and `pipenv`.
-
 4. Create an isolated virtual environment containing package dependencies,
    including those needed for development (*e.g.* testing, documentation) by running:
 
    ```console
-   pipx run tox -e pipenv
+   ./dev_setup.sh <your_python_version>
+   source py-orca-venv-<your_python_version>/bin/activate
    ```
 
 5. Install [pre-commit] hooks:
 
    ```
-   pipenv run pre-commit install
+   pre-commit install
    ```
 
    `orca` comes with a lot of hooks configured to automatically help the
