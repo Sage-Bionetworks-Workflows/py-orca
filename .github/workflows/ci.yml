@@ -96,8 +96,9 @@ jobs:
           SEVENBRIDGES_CONNECTION_URI: ${{ secrets.SEVENBRIDGES_CONNECTION_URI }}
           NEXTFLOWTOWER_CONNECTION_URI: ${{ secrets.NEXTFLOWTOWER_CONNECTION_URI }}
           SYNAPSE_CONNECTION_URI: ${{ secrets.SYNAPSE_CONNECTION_URI }}
-        run: >-
-            tox -- -rFEx --durations 10 --color yes
+        run: pytest -vv
+          # >-
+          #   tox -- -rFEx --durations 10 --color yes
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
