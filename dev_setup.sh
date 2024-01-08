@@ -9,7 +9,7 @@ if [ -z "$1" ]; then
 fi
 # Check if Python version is supported
 if [ "$1" != "3.10" ] && [ "$1" != "3.11" ]; then
-  echo "Invalid Python version. Please use 3.10 or 3.11."
+  echo "Unsupported Python version. Please use 3.10 or 3.11."
   exit 1
 fi
 # Set up and activate a Python 3.11 virtual environment
