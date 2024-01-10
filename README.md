@@ -24,21 +24,6 @@ Refer to [`.env.example`](.env.example) for the format of their values as well a
 
 Once your environment is set, you can create a virtual environment, install the Python dependencies, and run the demonstration script (after downloading it) as follows. Note that you will need to update the `s3_prefix` parameter so that it points to an S3 bucket that is accessible to your Tower workspace.
 
-### Using pipenv
-```bash
-# Create and activate a Python virtual environment (tested with Python 3.11)
-pipenv shell
-
-# Install Python dependencies
-pipenv install
-
-# If development dependencies are required to be installed
-pipenv install -d
-
-# Run the script using an example dataset
-python3 demo.py run --dataset_id 'syn51514585' --s3_prefix 's3://orca-service-test-project-tower-bucket/outputs'
-```
-
 ### Manually creating a virtual environment
 ```bash
 # Create and activate a Python virtual environment (tested with Python 3.10)
