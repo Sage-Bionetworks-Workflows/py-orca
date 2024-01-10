@@ -15,7 +15,7 @@ This Python package provides the components to connect various third-party servi
 
 This repository includes a demonstration script called [`demo.py`](demo.py), which showcases how you can use `py-orca` to launch and monitor your workflows on Nextflow Tower. Specifically, it illustrates how to process an RNA-seq dataset using a series of workflow runs, namely `nf-synstage`, `nf-core/rnaseq`, and `nf-synindex`. `py-orca` can be used with any Python-compatible workflow management system to orchestrate each step (_e.g._ Airflow, Prefect, Dagster). The demonstration script uses [Metaflow](https://metaflow.org/) because it's easy to run locally and has an intuitive syntax.
 
-The script assumes that the following environment variables are set.
+The script assumes that the following environment variables are set. Before setting up these environment variables, ensure that you have an AWS profile configured for a role that has access to the dev/ops tower workspace you plan to launch your workflows from.
 Refer to [`.env.example`](.env.example) for the format of their values as well as examples. You can set these environment variables using whatever method you prefer (_e.g._ using an `.env` file, sourcing a shell script).
 
 - `NEXTFLOWTOWER_CONNECTION_URI`
@@ -24,7 +24,9 @@ Refer to [`.env.example`](.env.example) for the format of their values as well a
 
 Once your environment is set, you can create a virtual environment, install the Python dependencies, and run the demonstration script (after downloading it) as follows. Note that you will need to update the `s3_prefix` parameter so that it points to an S3 bucket that is accessible to your Tower workspace.
 
-### Manually creating a virtual environment
+### Creating and setting up your py-`orca` virtual environment and executing `demo.py`
+
+Below are the instructions for creating and setting up your virtual environment and executing the `demo.py` If you would like to set up a developer environment with the relevant dependencies, you can execute the shell script [dev_setup](https://github.com/Sage-Bionetworks-Workflows/py-orca/blob/main/dev_setup.sh).
 ```bash
 # Create and activate a Python virtual environment (tested with Python 3.10)
 python3 -m venv venv/
