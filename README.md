@@ -26,7 +26,7 @@ Once your environment is set, you can create a virtual environment, install the 
 
 ### Creating and setting up your py-`orca` virtual environment and executing `demo.py`
 
-Below are the instructions for creating and setting up your virtual environment and executing the `demo.py` If you would like to set up a developer environment with the relevant dependencies, you can execute the shell script [dev_setup](https://github.com/Sage-Bionetworks-Workflows/py-orca/blob/main/dev_setup.sh).
+Below are the instructions for creating and setting up your virtual environment and executing the `demo.py` If you would like to set up a developer environment with the relevant dependencies, you can execute the shell script [dev_setup](https://github.com/Sage-Bionetworks-Workflows/py-orca/blob/main/dev_setup.sh) in a clone of this repository stored on your machine.
 ```bash
 # Create and activate a Python virtual environment (tested with Python 3.10)
 python3 -m venv venv/
