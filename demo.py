@@ -44,9 +44,10 @@ class RnaseqDataset:
         run_name = self.get_run_name("synstage")
         return LaunchInfo(
             run_name=run_name,
-            pipeline="Sage-Bionetworks-Workflows/nf-synstage",
+            pipeline="Sage-Bionetworks-Workflows/nf-synapse",
             revision="main",
             profiles=["sage"],
+            entry_name="NF_SYNSTAGE",
             params={
                 "input": samplesheet_uri,
             },
@@ -130,7 +131,7 @@ class TowerRnaseqFlow(FlowSpec):
         if scheme != "s3":
             raise ValueError("Expected an S3 URI.")
         path = PurePosixPath(samplesheet_resource)
-        return f"{scheme}://{path.parent}/synstage/{path.name}"
+        return f"{scheme}://{path.parent}/{path.name}"
 
     def monitor_workflow(self, workflow_id):
         """Monitor any workflow run (wait until done)."""
