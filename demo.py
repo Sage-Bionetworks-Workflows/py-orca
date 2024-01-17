@@ -46,7 +46,7 @@ class RnaseqDataset:
             run_name=run_name,
             pipeline="Sage-Bionetworks-Workflows/nf-synapse",
             revision="main",
-            profiles=["sage"],
+            profiles=["docker"],
             entry_name="NF_SYNSTAGE",
             params={
                 "input": samplesheet_uri,
@@ -125,13 +125,13 @@ class TowerRnaseqFlow(FlowSpec):
         help="S3 prefix for storing output files from different runs",
     )
 
-    def get_staged_samplesheet(self, samplesheet: str) -> str:
+    def get_staged_samplesheet(self, samplesheet: str, run_name: str) -> str:
         """Generate staged samplesheet based on synstage behavior."""
         scheme, _, samplesheet_resource = samplesheet.partition("://")
         if scheme != "s3":
             raise ValueError("Expected an S3 URI.")
         path = PurePosixPath(samplesheet_resource)
-        return f"{scheme}://{path.parent}/{path.name}"
+        return f"{scheme}://{path.parent}/synstage/{run_name}/{path.name}"
 
     def monitor_workflow(self, workflow_id):
         """Monitor any workflow run (wait until done)."""
@@ -186,7 +186,7 @@ class TowerRnaseqFlow(FlowSpec):
     @step
     def launch_rnaseq(self):
         """Launch nf-core/rnaseq workflow to process RNA-seq data."""
-        staged_uri = self.get_staged_samplesheet(self.samplesheet_uri)
+        staged_uri = self.get_staged_samplesheet(self.samplesheet_uri, self.dataset.get_run_name("synstage"))
         launch_info = self.dataset.rnaseq_info(staged_uri, self.rnaseq_outdir)
         self.rnaseq_id = self.tower.launch_workflow(launch_info, "spot")
         self.next(self.monitor_rnaseq)
