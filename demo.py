@@ -40,13 +40,14 @@ class RnaseqDataset:
         return f"{self.id}_{suffix}"
 
     def synstage_info(self, samplesheet_uri: str) -> LaunchInfo:
-        """Generate LaunchInfo for nf-synstage."""
+        """Generate LaunchInfo for nf-synapse/synstage."""
         run_name = self.get_run_name("synstage")
         return LaunchInfo(
             run_name=run_name,
-            pipeline="Sage-Bionetworks-Workflows/nf-synstage",
+            pipeline="Sage-Bionetworks-Workflows/nf-synapse",
             revision="main",
-            profiles=["sage"],
+            profiles=["docker"],
+            entry_name="NF_SYNSTAGE",
             params={
                 "input": samplesheet_uri,
             },
@@ -124,13 +125,13 @@ class TowerRnaseqFlow(FlowSpec):
         help="S3 prefix for storing output files from different runs",
     )
 
-    def get_staged_samplesheet(self, samplesheet: str) -> str:
+    def get_staged_samplesheet(self, samplesheet: str, run_name: str) -> str:
         """Generate staged samplesheet based on synstage behavior."""
         scheme, _, samplesheet_resource = samplesheet.partition("://")
         if scheme != "s3":
             raise ValueError("Expected an S3 URI.")
         path = PurePosixPath(samplesheet_resource)
-        return f"{scheme}://{path.parent}/synstage/{path.name}"
+        return f"{scheme}://{path.parent}/synstage/{run_name}/{path.name}"
 
     def monitor_workflow(self, workflow_id):
         """Monitor any workflow run (wait until done)."""
@@ -171,21 +172,23 @@ class TowerRnaseqFlow(FlowSpec):
 
     @step
     def launch_synstage(self):
-        """Launch nf-synstage to stage Synapse files in samplesheet."""
+        """Launch nf-synapse/synstage to stage Synapse files in samplesheet."""
         launch_info = self.dataset.synstage_info(self.samplesheet_uri)
         self.synstage_id = self.tower.launch_workflow(launch_info, "spot")
         self.next(self.monitor_synstage)
 
     @step
     def monitor_synstage(self):
-        """Monitor nf-synstage workflow run (wait until done)."""
+        """Monitor nf-synapse/synstage workflow run (wait until done)."""
         self.monitor_workflow(self.synstage_id)
         self.next(self.launch_rnaseq)
 
     @step
     def launch_rnaseq(self):
         """Launch nf-core/rnaseq workflow to process RNA-seq data."""
-        staged_uri = self.get_staged_samplesheet(self.samplesheet_uri)
+        staged_uri = self.get_staged_samplesheet(
+            self.samplesheet_uri, self.dataset.get_run_name("synstage")
+        )
         launch_info = self.dataset.rnaseq_info(staged_uri, self.rnaseq_outdir)
         self.rnaseq_id = self.tower.launch_workflow(launch_info, "spot")
         self.next(self.monitor_rnaseq)
