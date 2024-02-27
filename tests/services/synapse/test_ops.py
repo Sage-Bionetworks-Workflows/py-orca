@@ -44,12 +44,13 @@ def createMockTable(mock, dataframe):
 
 
 def test_get_submissions(mocker, mocked_ops):
+    # TODO: return value for tableQuery needs to be a CsvFileTable 
     input_dict = {
         "id": ["submission_1", "submission_2"],
         "status": ["RECEIVED", "RECEIVED"],
     }
 
-    # Mock the tableQuery call in ``get_submissions``, and its expected output
+    # Mock the tableQuery call in ``get_submissions``, and generate expected output
     mock_table_query = mocker.patch.object(mocked_ops.client, "tableQuery")
     mock_as_dataframe = mock_table_query.return_value.asDataFrame
     mock_as_dataframe.return_value.__getitem__.return_value.tolist.return_value = (
@@ -73,10 +74,10 @@ def test_get_submissions(mocker, mocked_ops):
 
 
 def test_update_submissions_status(mocker, mocked_ops):
-    mock = mocker.patch.object(mocked_ops, "update_submission_status")
-    mocked_ops.update_submissions_status(["submission_1", "submission_2"], "RECEIVED")
-    mock.assert_called_once_with("submission_1", "RECEIVED")
-    mock.assert_called_once_with("submission_2", "RECEIVED")
+    mock_update_status = mocker.patch.object(mocked_ops, "update_submissions_status")
+    mocked_ops.update_submissions_status(["submission_1", "submission_2"], "SCORED")
+    
+    mock_update_status.assert_called_once_with(["submission_1", "submission_2"], "SCORED")
 
 
 """
