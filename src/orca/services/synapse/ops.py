@@ -91,14 +91,15 @@ class SynapseOps(BaseOps):
         query_results = syn.tableQuery(
             f"select * from {submission_view} where status = '{submission_status}'"
         )
+        print(query_results.asDataFrame()["id"])
         submission_ids = query_results.asDataFrame()["id"].tolist()
 
         return submission_ids
 
-    def update_submission_status(
-        self, submission_ids: Union[int, List[int]], submission_status: str
+    def update_submissions_status(
+        self, submission_ids: Union[str, List[str]], submission_status: str
     ) -> None:
-        """Update the status of a submission in Synapse.
+        """Update the status of one or more submissions in Synapse.
 
         Arguments:
             syn: A Synapse object.
@@ -113,14 +114,14 @@ class SynapseOps(BaseOps):
         if isinstance(submission_ids, int):
             submission_ids = list(int)
 
-        # Let's catch for anything that was fed that is NOT an int or list of ints
+        # Let's catch for anything that was fed that is NOT a str or list of strs
         if not isinstance(submission_ids, list):
             raise TypeError(
                 "Not a list. ``submission_ids`` must be an int or list of ints."
             )
-        if not all(isinstance(id, int) for id in submission_ids):
+        if not all(isinstance(id, str) for id in submission_ids):
             raise TypeError(
-                "Non-ints found. ``submission_ids`` must be an int or list of ints."
+                "Non-strings found. ``submission_ids`` must be an int or list of ints."
             )
 
         # Update submission status(es)
