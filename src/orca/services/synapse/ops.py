@@ -1,5 +1,4 @@
 import logging
-
 from dataclasses import field
 from functools import cached_property
 from typing import ClassVar, List, Union
