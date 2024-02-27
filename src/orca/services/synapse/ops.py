@@ -71,11 +71,14 @@ class SynapseOps(BaseOps):
     def get_submissions(
         self, submission_view: str, submission_status: str = "RECEIVED"
     ) -> list:
-        """Get all submissions with desired submission status in a Synapse submission view.
+        """
+        Get all submissions with desired submission status in a Synapse
+        submission view.
 
         Arguments:
             submission_view: The Synapse view to get submissions from.
-            submission_status: The submission status to filter for. Defaults to "RECEIVED".
+            submission_status: The submission status to filter for.
+                               Defaults to "RECEIVED".
 
         Returns:
             A list of submission IDs.
@@ -87,7 +90,7 @@ class SynapseOps(BaseOps):
         # Trigger indexing
         self.trigger_indexing(syn, submission_view)
 
-        # Get all submissions for the given ``submission_view`` of status == ``submission_status``
+        # Get all submissions for the given ``submission_view``
         query_results = syn.tableQuery(
             f"select * from {submission_view} where status = '{submission_status}'"
         )
