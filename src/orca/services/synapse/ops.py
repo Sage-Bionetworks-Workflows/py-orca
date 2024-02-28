@@ -116,9 +116,7 @@ class SynapseOps(BaseOps):
 
         # Let's catch for anything that was fed that is NOT a str or int
         if type(submission_id) not in [str, int]:
-            raise TypeError(
-                "``submission_id`` must be a string or int."
-            )
+            raise TypeError("``submission_id`` must be a string or int.")
 
         # Update submission status
         utils.change_submission_status(

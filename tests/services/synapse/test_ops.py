@@ -174,6 +174,7 @@ def test_update_submission_status(
         mocked_ops.client, submissionid=submission_id, status=submission_status
     )
 
+
 @pytest.mark.parametrize("submission_id", [(111.0, [111], (111))])
 def test_update_submission_status_with_wrong_data_type(submission_id) -> None:
     """
