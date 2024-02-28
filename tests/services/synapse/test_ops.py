@@ -5,8 +5,8 @@ from unittest.mock import MagicMock
 
 import pandas as pd
 import pytest
-
 from challengeutils import utils
+
 from orca.errors import ConfigError
 from orca.services.synapse import SynapseOps
 
@@ -156,7 +156,8 @@ def test_update_submission_status(
     submission_id = "1234"
     etag = "0000"
 
-    # Mocking the ``change_submission_status`` call in ``SynapseOps.update_submissions_status``
+    # Mocking the ``change_submission_status`` call
+    # in ``SynapseOps.update_submissions_status``
     status_object = mocked_ops.client.evaluation.SubmissionStatus(
         id=submission_id,
         etag=etag,
