@@ -62,7 +62,7 @@ class SynapseOps(BaseOps):
         submissions_num = sum(1 for submission in received_submissions)
         return submissions_num > 0
 
-    def trigger_indexing(self, syn: Synapse, synapse_view: str) -> None:
+    def trigger_indexing(self, synapse_view: str) -> None:
         """
         Trigger indexing in Synapse.
 
@@ -70,7 +70,7 @@ class SynapseOps(BaseOps):
             syn: A Synapse object.
             synapse_view: The Synapse ID of the view.
         """
-        syn.tableQuery(f"select * from {synapse_view} limit 1")
+        self.client.tableQuery(f"select * from {synapse_view} limit 1")
 
     def get_submissions_with_status(
         self, submission_view: str, submission_status: str = "RECEIVED"
@@ -80,7 +80,7 @@ class SynapseOps(BaseOps):
         submission view.
 
         Arguments:
-            submission_view: The Synapse view to get submissions from.
+            submission_view: The Synapse ID of the table view to get submissions from.
             submission_status: The submission status to filter for.
                                Defaults to "RECEIVED".
 
@@ -92,7 +92,7 @@ class SynapseOps(BaseOps):
         syn = self.client
 
         # Trigger indexing
-        self.trigger_indexing(syn, submission_view)
+        self.trigger_indexing(submission_view)
 
         # Get all submissions for the given ``submission_view``
         query_results = syn.tableQuery(
