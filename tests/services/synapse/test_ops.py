@@ -41,6 +41,14 @@ def test_monitor_evaluation_queue_returns_true_when_there_are_new_submissions(
 
 
 def test_trigger_indexing(mocker, mocked_ops):
+    """
+    Tests that the ``trigger_indexing`` method in ``SynapseOps``
+    triggers indexing in a Synapse table view.
+
+    Arguments:
+        mocker: A mocker object.
+        mocked_ops: A mocked instance of ``SynapseOps``.
+    """
     # Mocking connection to the Synapse API
     syn_mock = mocked_ops.client
 
@@ -58,13 +66,16 @@ def test_trigger_indexing(mocker, mocked_ops):
         )
 
 
-def createMockTable(mock, dataframe):
-    table = mock.create_autospec(synapseclient.table.CsvFileTable)
-    table.asDataFrame.return_value = dataframe
-    return table
-
-
 def test_get_submissions(mocker, mocked_ops):
+    """
+    Tests that the ``get_submissions`` method in ``SynapseOps``
+    returns a list of submission IDs.
+
+    Arguments:
+        mocker: A mocker object.
+        mocked_ops: A mocked instance of ``SynapseOps``.
+
+    """
     # Input values
     submission_view = "syn111"
     submission_status = "RECEIVED"
@@ -82,7 +93,7 @@ def test_get_submissions(mocker, mocked_ops):
     table_mock = MagicMock()
     table_mock.asDataFrame.return_value = pd.DataFrame(
         input_dict
-    )  # input_dict#pd.DataFrame({"id": submission_ids})
+    )
 
     # Mock the ``trigger_indexing`` call in SynapseOps() and the tableQuery call
     # in ``SynapseOps().get_submissions``
@@ -92,7 +103,6 @@ def test_get_submissions(mocker, mocked_ops):
             result = mocked_ops.get_submissions(submission_view, submission_status)
 
             # Assertions
-            # trigger_indexing_mock.assert_called_once_with(syn_mock, "test_view")
             syn_mock.tableQuery.assert_called_once_with(
                 f"select * from {submission_view} where status = '{submission_status}'"
             )
@@ -101,6 +111,14 @@ def test_get_submissions(mocker, mocked_ops):
 
 
 def test_update_submissions_status(mocker, mocked_ops):
+    """
+    Tests that the ``update_submissions_status`` method in ``SynapseOps``
+    updates the status of one or more submissions in Synapse.
+
+    Arguments:
+        mocker: A mocker object.
+        mocked_ops: A mocked instance of ``SynapseOps``.
+    """
     # Mocking the ``update_submission_status`` call in ``SynapseOps``
     mock_update_status = mocker.patch.object(mocked_ops, "update_submissions_status")
 
@@ -114,6 +132,14 @@ def test_update_submissions_status(mocker, mocked_ops):
 
 
 def test_update_submission_status_with_non_string_non_list_input(mocker, mocked_ops):
+    """
+    Tests that the ``update_submissions_status`` method in ``SynapseOps``
+    raises an error if the input is neither a string nor a list.
+
+    Arguments:
+        mocker: A mocker object.
+        mocked_ops: A mocked instance of ``SynapseOps``.
+    """
     # Mocking the ``update_submission_status`` call in ``SynapseOps``.
     # Test for non-string + non-list submission_ids.
     with mocker.patch.object(
@@ -128,6 +154,14 @@ def test_update_submission_status_with_non_string_non_list_input(mocker, mocked_
 
 
 def test_update_submission_status_with_non_string_in_list(mocker, mocked_ops):
+    """
+    Tests that the ``update_submissions_status`` method in ``SynapseOps``
+    raises an error if the input is a list with a non-string element.
+
+    Arguments:
+        mocker: A mocker object.
+        mocked_ops: A mocked instance of ``SynapseOps``.
+    """
     # Mocking the ``update_submission_status`` call in ``SynapseOps``
     # Test for non-string elements in list
     with mocker.patch.object(
