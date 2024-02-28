@@ -86,16 +86,13 @@ class SynapseOps(BaseOps):
 
         Returns:
             A list of submission IDs.
+
         """
-
-        # Gain access to Synapse API
-        syn = self.client
-
         # Trigger indexing
         self.trigger_indexing(submission_view)
 
         # Get all submissions for the given ``submission_view``
-        query_results = syn.tableQuery(
+        query_results = self.client.tableQuery(
             f"select * from {submission_view} where status = '{submission_status}'"
         )
 
@@ -114,10 +111,8 @@ class SynapseOps(BaseOps):
         Arguments:
             submission_ids: The Synapse ID of the submission(s).
             submission_status: The new status of the submission(s).
-        """
 
-        # Gain access to Synapse API
-        syn = self.client
+        """
 
         # Prepare a single submission_id for the for-loop
         if type(submission_ids) in [str, int]:
@@ -136,5 +131,5 @@ class SynapseOps(BaseOps):
         # Update submission status(es)
         for id in submission_ids:
             utils.change_submission_status(
-                syn, submissionid=id, status=submission_status
+                self.client, submissionid=id, status=submission_status
             )
