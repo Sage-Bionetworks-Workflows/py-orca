@@ -187,10 +187,6 @@ def test_update_submission_status_with_non_string_non_list_input() -> None:
     Tests that the ``update_submissions_status`` method in ``SynapseOps``
     raises an error if the input is neither a string nor a list.
 
-    Arguments:
-        mocker: A mocker object.
-        mocked_ops: A mocked instance of ``SynapseOps``.
-
     """
     # Test for non-string + non-list submission_ids.
     error = "``submission_ids`` must be a string, int, or list of either/both."
@@ -206,10 +202,6 @@ def test_update_submission_status_with_float_in_list() -> None:
     """
     Tests that the ``update_submissions_status`` method in ``SynapseOps``
     raises an error if the input is a list with a non-string element.
-
-    Arguments:
-        mocker: A mocker object.
-        mocked_ops: A mocked instance of ``SynapseOps``.
 
     """
     # Test for non-string elements in list
