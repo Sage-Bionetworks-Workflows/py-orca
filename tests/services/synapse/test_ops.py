@@ -61,57 +61,67 @@ def createMockTable(mock, dataframe):
     return table
 
 def test_get_submissions(mocker, mocked_ops):
-    # TODO: return value for tableQuery needs to be a CsvFileTable 
+    # Input values
+    submission_view = "syn111"
+    submission_status = "RECEIVED"
+
+    # TODO: return value for tableQuery needs to be a CsvFileTable??
     input_dict = {
         "id": ["submission_1", "submission_2"],
         "status": ["RECEIVED", "RECEIVED"],
     }
 
+    # Mocking connection to the Synapse API
     syn_mock = mocked_ops.client
+
     # Mocking the table query results
     table_mock = MagicMock()
     table_mock.asDataFrame.return_value = pd.DataFrame(input_dict)#input_dict#pd.DataFrame({"id": submission_ids})
     #table_mock.asCsvFileTable.return_value = createMockTable(mock, pd.DataFrame(input_dict))
 
-    # Mock the tableQuery call in ``get_submissions``, and generate expected output
+    # Mock the ``trigger_indexing`` call in SynapseOps() and the tableQuery call in ``SynapseOps().get_submissions``
     with mocker.patch.object(mocked_ops, "trigger_indexing", return_value=None) as trigger_indexing_mock:
-        with mocker.patch.object(syn_mock, 'tableQuery', return_value=table_mock):
-        
-            # Calling the function
-            result = mocked_ops.get_submissions("test_view", "RECEIVED")
-            print(result)
+        with mocker.patch.object(syn_mock, "tableQuery", return_value=table_mock):
+
+            # Calling the function to be tested
+            result = mocked_ops.get_submissions(submission_view, submission_status)
+
             # Assertions
             #trigger_indexing_mock.assert_called_once_with(syn_mock, "test_view")
-            syn_mock.tableQuery.assert_called_once_with("select * from test_view where status = 'RECEIVED'")
+            syn_mock.tableQuery.assert_called_once_with(f"select * from {submission_view} where status = '{submission_status}'")
             table_mock.asDataFrame.assert_called()
             assert result == input_dict["id"]
 
-    # # Mock the tableQuery call in ``get_submissions``, and generate expected output
-    # mock_table_query = mocker.patch.object(mocked_ops.client,
-    #                                        "tableQuery",
-    #                                        return_value=table_mock)
-    # mock_as_dataframe = mock_table_query.return_value.asDataFrame
-    # mock_as_dataframe.return_value.__getitem__.return_value.tolist.return_value = (
-    #     input_dict["id"]
-    # )
-
-    # # Input variables
-    # submission_id = "syn111"
-    # submission_status = "RECEIVED"
-
-    # # Call ``get_submissions``
-    # results = mocked_ops.get_submissions(submission_id, submission_status)
-
-    # # Ensure the appropriate query was made based on Input variables
-    # mock_table_query.assert_called_with(
-    #     f"select * from {submission_id} where status = '{submission_status}'"
-    # )
-
-    # # Ensure output is as expected
-    # assert set(results) == set(input_dict["id"])
-
 def test_update_submissions_status(mocker, mocked_ops):
+    # Mocking the ``update_submission_status`` call in ``SynapseOps``
     mock_update_status = mocker.patch.object(mocked_ops, "update_submissions_status")
+
+    # Calling the function to be tested
     mocked_ops.update_submissions_status(["submission_1", "submission_2"], "SCORED")
     
+    # Assertions
     mock_update_status.assert_called_once_with(["submission_1", "submission_2"], "SCORED")
+
+def test_update_submission_status_with_non_string_non_list_input(mocker, mocked_ops):
+    # Mocking the ``update_submission_status`` call in ``SynapseOps``.
+    # Test for non-string + non-list submission_ids.
+    with mocker.patch.object(mocked_ops, "update_submissions_status", side_effect=TypeError) as moc:
+        with pytest.raises(TypeError):
+
+            # Calling the function to be tested
+            mocked_ops.update_submissions_status(1234, "SCORED")
+
+            # Assertions
+            mocked_ops.update_submissions_status.assert_called_once_with(1234, "SCORED")
+  
+def test_update_submission_status_with_non_string_in_list(mocker, mocked_ops):
+    # Mocking the ``update_submission_status`` call in ``SynapseOps``
+    # Test for non-string elements in list
+    with mocker.patch.object(mocked_ops, "update_submissions_status", side_effect=TypeError) as moc:
+        with pytest.raises(TypeError):
+
+            # Calling the function to be tested
+            mocked_ops.update_submissions_status(["syn111", 1234], "SCORED")
+
+            # Assertions
+            mocked_ops.update_submissions_status.assert_called_once_with(["syn111", 1234], "SCORED")
