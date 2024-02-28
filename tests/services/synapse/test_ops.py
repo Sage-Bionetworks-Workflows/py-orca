@@ -131,7 +131,7 @@ def test_update_submissions_status(mocker, mocked_ops):
     )
 
 
-def test_update_submission_status_with_non_string_non_list_input(mocker, mocked_ops):
+def test_update_submission_status_with_non_string_non_list_input():
     """
     Tests that the ``update_submissions_status`` method in ``SynapseOps``
     raises an error if the input is neither a string nor a list.
@@ -139,18 +139,17 @@ def test_update_submission_status_with_non_string_non_list_input(mocker, mocked_
     Arguments:
         mocker: A mocker object.
         mocked_ops: A mocked instance of ``SynapseOps``.
-    """
-    # Mocking the ``update_submission_status`` call in ``SynapseOps``.
-    # Test for non-string + non-list submission_ids.
-    with mocker.patch.object(
-        mocked_ops, "update_submissions_status", side_effect=TypeError
-    ):
-        with pytest.raises(TypeError):
-            # Calling the function to be tested
-            mocked_ops.update_submissions_status(1234, "SCORED")
 
-            # Assertions
-            mocked_ops.update_submissions_status.assert_called_once_with(1234, "SCORED")
+    """
+    # Test for non-string + non-list submission_ids.
+    error =  "Not a list. ``submission_ids`` must be an int or list of ints."
+    with pytest.raises(TypeError) as err:
+
+        # Calling the function to be tested
+        SynapseOps().update_submissions_status(1234, "SCORED")
+
+    # Assertions
+    assert str(err.value) == error, f"Incorrect error message. Got '{err.value}'"
 
 
 def test_update_submission_status_with_non_string_in_list(mocker, mocked_ops):
@@ -161,17 +160,14 @@ def test_update_submission_status_with_non_string_in_list(mocker, mocked_ops):
     Arguments:
         mocker: A mocker object.
         mocked_ops: A mocked instance of ``SynapseOps``.
-    """
-    # Mocking the ``update_submission_status`` call in ``SynapseOps``
-    # Test for non-string elements in list
-    with mocker.patch.object(
-        mocked_ops, "update_submissions_status", side_effect=TypeError
-    ):
-        with pytest.raises(TypeError):
-            # Calling the function to be tested
-            mocked_ops.update_submissions_status(["syn111", 1234], "SCORED")
 
-            # Assertions
-            mocked_ops.update_submissions_status.assert_called_once_with(
-                ["syn111", 1234], "SCORED"
-            )
+    """
+    # Test for non-string elements in list
+    error =  "Non-strings found. ``submission_ids`` must be an int or list of ints."
+    with pytest.raises(TypeError) as err:
+
+        # Calling the function to be tested
+        SynapseOps().update_submissions_status(["syn111", 1234], "SCORED")
+
+    # Assertions
+    assert str(err.value) == error, f"Incorrect error message. Got '{err.value}'"
