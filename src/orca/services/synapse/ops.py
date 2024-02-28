@@ -122,13 +122,9 @@ class SynapseOps(BaseOps):
 
         # Let's catch for anything that was fed that is NOT a str or list of strs
         if not isinstance(submission_ids, list):
-            raise TypeError(
-                "Not a list. ``submission_ids`` must be a string or list of strings."
-            )
+            raise TypeError("``submission_ids`` must be a string or list of strings.")
         if not all(isinstance(id, str) for id in submission_ids):
-            raise TypeError(
-                "Invalid type. ``submission_ids`` must be a string or list of strings."
-            )
+            raise TypeError("``submission_ids`` must be a string or list of strings.")
 
         # Update submission status(es)
         for id in submission_ids:
