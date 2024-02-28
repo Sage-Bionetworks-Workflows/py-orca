@@ -1,3 +1,6 @@
+"""
+Tests for Synapse operations conducted by SynapseOps.
+"""
 from unittest.mock import MagicMock
 
 import pandas as pd
@@ -107,7 +110,6 @@ def test_get_submissions(mocker: pytest.fixture, mocked_ops: MagicMock) -> None:
     submission_view = "syn111"
     submission_status = "RECEIVED"
 
-    # TODO: return value for tableQuery needs to be a CsvFileTable??
     input_dict = {
         "id": ["submission_1", "submission_2"],
         "status": ["RECEIVED", "RECEIVED"],
@@ -180,7 +182,7 @@ def test_update_submissions_status_with_input_string(
     mock_update_status.assert_called_once_with("submission_1", "RECEIVED")
 
 
-def test_update_submission_status_with_non_string_non_list_input():
+def test_update_submission_status_with_non_string_non_list_input() -> None:
     """
     Tests that the ``update_submissions_status`` method in ``SynapseOps``
     raises an error if the input is neither a string nor a list.
@@ -200,7 +202,7 @@ def test_update_submission_status_with_non_string_non_list_input():
     assert str(err.value) == error, f"Incorrect error message. Got '{err.value}'"
 
 
-def test_update_submission_status_with_non_string_in_list():
+def test_update_submission_status_with_non_string_in_list() -> None:
     """
     Tests that the ``update_submissions_status`` method in ``SynapseOps``
     raises an error if the input is a list with a non-string element.
