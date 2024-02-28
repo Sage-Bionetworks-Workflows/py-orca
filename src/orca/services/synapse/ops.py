@@ -104,7 +104,9 @@ class SynapseOps(BaseOps):
         return submission_ids
 
     def update_submissions_status(
-        self, submission_ids: Union[str, List[str]], submission_status: str
+        self,
+        submission_ids: Union[int, str, List[Union[int, str]]],
+        submission_status: str,
     ) -> None:
         """Update the status of one or more submissions in Synapse.
 
@@ -117,14 +119,14 @@ class SynapseOps(BaseOps):
         syn = self.client
 
         # Prepare a single submission_id for the for-loop
-        if isinstance(submission_ids, str):
+        if isinstance(submission_ids, str) | isinstance(submission_ids, int):
             submission_ids = [submission_ids]
 
-        # Let's catch for anything that was fed that is NOT a str or list of strs
+        # Let's catch for anything that was fed that is NOT a str, int, or list
         if not isinstance(submission_ids, list):
-            raise TypeError("``submission_ids`` must be a string or list of strings.")
-        if not all(isinstance(id, str) for id in submission_ids):
-            raise TypeError("``submission_ids`` must be a string or list of strings.")
+            raise TypeError(
+                "``submission_ids`` must be a string, int, or list of either/both."
+            )
 
         # Update submission status(es)
         for id in submission_ids:

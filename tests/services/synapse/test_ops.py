@@ -202,7 +202,7 @@ def test_update_submission_status_with_non_string_non_list_input() -> None:
     assert str(err.value) == error, f"Incorrect error message. Got '{err.value}'"
 
 
-def test_update_submission_status_with_non_string_in_list() -> None:
+def test_update_submission_status_with_float_in_list() -> None:
     """
     Tests that the ``update_submissions_status`` method in ``SynapseOps``
     raises an error if the input is a list with a non-string element.
@@ -213,7 +213,7 @@ def test_update_submission_status_with_non_string_in_list() -> None:
 
     """
     # Test for non-string elements in list
-    error = "``submission_ids`` must be a string or list of strings."
+    error = "``submission_ids`` must be a string, int, or list of them."
     with pytest.raises(TypeError) as err:
         # Calling the function to be tested
         SynapseOps().update_submissions_status(["syn111", 1234], "SCORED")
