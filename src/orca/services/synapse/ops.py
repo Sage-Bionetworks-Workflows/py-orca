@@ -72,7 +72,7 @@ class SynapseOps(BaseOps):
         """
         syn.tableQuery(f"select * from {synapse_view} limit 1")
 
-    def get_submissions(
+    def get_submissions_with_status(
         self, submission_view: str, submission_status: str = "RECEIVED"
     ) -> List[str]:
         """
@@ -108,7 +108,8 @@ class SynapseOps(BaseOps):
         submission_ids: Union[int, str, List[Union[int, str]]],
         submission_status: str,
     ) -> None:
-        """Update the status of one or more submissions in Synapse.
+        """
+        Update the status of one or more submissions in Synapse.
 
         Arguments:
             submission_ids: The Synapse ID of the submission(s).
@@ -119,11 +120,15 @@ class SynapseOps(BaseOps):
         syn = self.client
 
         # Prepare a single submission_id for the for-loop
-        if isinstance(submission_ids, str) | isinstance(submission_ids, int):
+        if type(submission_ids) in [str, int]:
             submission_ids = [submission_ids]
 
         # Let's catch for anything that was fed that is NOT a str, int, or list
         if not isinstance(submission_ids, list):
+            raise TypeError(
+                "``submission_ids`` must be a string, int, or list of either/both."
+            )
+        if not all(type(id) in [str, int] for id in submission_ids):
             raise TypeError(
                 "``submission_ids`` must be a string, int, or list of either/both."
             )

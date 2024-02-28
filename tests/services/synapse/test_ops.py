@@ -127,7 +127,7 @@ def test_get_submissions(mocker: pytest.fixture, mocked_ops: MagicMock) -> None:
     with mocker.patch.object(mocked_ops, "trigger_indexing", return_value=None):
         with mocker.patch.object(syn_mock, "tableQuery", return_value=table_mock):
             # Calling the function to be tested
-            result = mocked_ops.get_submissions(submission_view, submission_status)
+            result = mocked_ops.get_submissions_with_status(submission_view, submission_status)
 
             # Assertions
             syn_mock.tableQuery.assert_called_once_with(
@@ -193,7 +193,7 @@ def test_update_submission_status_with_non_string_non_list_input() -> None:
 
     """
     # Test for non-string + non-list submission_ids.
-    error = "``submission_ids`` must be a string or list of strings."
+    error = "``submission_ids`` must be a string, int, or list of either/both."
     with pytest.raises(TypeError) as err:
         # Calling the function to be tested
         SynapseOps().update_submissions_status(1234, "SCORED")
@@ -213,7 +213,7 @@ def test_update_submission_status_with_float_in_list() -> None:
 
     """
     # Test for non-string elements in list
-    error = "``submission_ids`` must be a string, int, or list of them."
+    error = "``submission_ids`` must be a string, int, or list of either/both."
     with pytest.raises(TypeError) as err:
         # Calling the function to be tested
         SynapseOps().update_submissions_status(["syn111", 1234], "SCORED")
