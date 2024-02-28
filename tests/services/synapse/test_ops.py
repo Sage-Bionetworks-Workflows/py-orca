@@ -107,7 +107,7 @@ def test_get_submissions(mocker, mocked_ops):
             assert result == input_dict["id"]
 
 
-def test_update_submissions_status(mocker, mocked_ops):
+def test_update_submissions_status_with_input_list(mocker, mocked_ops):
     """
     Tests that the ``update_submissions_status`` method in ``SynapseOps``
     updates the status of one or more submissions in Synapse.
@@ -119,13 +119,33 @@ def test_update_submissions_status(mocker, mocked_ops):
     # Mocking the ``update_submission_status`` call in ``SynapseOps``
     mock_update_status = mocker.patch.object(mocked_ops, "update_submissions_status")
 
-    # Calling the function to be tested
+    # Calling the function to be tested with an input list of strings
     mocked_ops.update_submissions_status(["submission_1", "submission_2"], "SCORED")
 
     # Assertions
     mock_update_status.assert_called_once_with(
         ["submission_1", "submission_2"], "SCORED"
     )
+
+
+def test_update_submissions_status_with_input_string(mocker, mocked_ops):
+    """
+    Tests that the ``update_submissions_status`` method in ``SynapseOps``
+    updates the status of one or more submissions in Synapse.
+
+    Arguments:
+        mocker: A mocker object.
+        mocked_ops: A mocked instance of ``SynapseOps``.
+
+    """
+    # Mocking the ``update_submission_status`` call in ``SynapseOps``
+    mock_update_status = mocker.patch.object(mocked_ops, "update_submissions_status")
+
+    # Calling the function to be tested with an input string
+    mocked_ops.update_submissions_status("submission_1", "RECEIVED")
+
+    # Assertions
+    mock_update_status.assert_called_once_with("submission_1", "RECEIVED")
 
 
 def test_update_submission_status_with_non_string_non_list_input():
