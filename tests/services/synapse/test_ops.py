@@ -8,27 +8,55 @@ from orca.services.synapse import SynapseOps
 
 
 def test_for_an_error_when_accessing_fs_without_credentials(
-    patch_os_environ, syn_project_id
-):
+    patch_os_environ: pytest.fixture, syn_project_id: str
+) -> None:
+    """
+    Test for an error when accessing fs without credentials.
+
+    Arguments:
+        patch_os_environ: The OS environment patch
+        syn_project_id: The project ID
+
+    """
     ops = SynapseOps()
     with pytest.raises(ConfigError):
         ops.fs.listdir(syn_project_id)
 
 
 def test_monitor_evaluation_queue_returns_false_when_there_are_no_new_submissions(
-    mocker, mocked_ops
-):
+    mocker: pytest.fixture, mocked_ops: MagicMock
+) -> None:
+    """
+    Function to test if the monitor evaluation queue returns False
+    when there are no new submissions.
+
+    Arguments:
+        mocker: The mocker object for mocking.
+        mocked_ops: A mocked instance of ``SynapseOps``.
+
+    Returns:
+        Boolean indicating if there are no new submissions.
+    """
     mock = mocker.patch.object(
         mocked_ops.client, "getSubmissionBundles", return_value=[]
     )
     result = mocked_ops.monitor_evaluation_queue("foo")
     mock.assert_called_once_with("foo", status="RECEIVED")
-    assert result is False
+    assert not result
 
 
 def test_monitor_evaluation_queue_returns_true_when_there_are_new_submissions(
-    mocker, mocked_ops
-):
+    mocker: pytest.fixture, mocked_ops: MagicMock
+) -> None:
+    """
+    A function to test if the monitor evaluation queue returns True
+    when there are new submissions.
+
+    Arguments:
+        mocker: A mocker object.
+        mocked_ops: A mocked instance of ``SynapseOps``.
+
+    """
     mock = mocker.patch.object(
         mocked_ops.client,
         "getSubmissionBundles",
@@ -39,7 +67,7 @@ def test_monitor_evaluation_queue_returns_true_when_there_are_new_submissions(
     assert result
 
 
-def test_trigger_indexing(mocker, mocked_ops):
+def test_trigger_indexing(mocker: pytest.fixture, mocked_ops: MagicMock) -> None:
     """
     Tests that the ``trigger_indexing`` method in ``SynapseOps``
     triggers indexing in a Synapse table view.
@@ -65,7 +93,7 @@ def test_trigger_indexing(mocker, mocked_ops):
         )
 
 
-def test_get_submissions(mocker, mocked_ops):
+def test_get_submissions(mocker: pytest.fixture, mocked_ops: MagicMock) -> None:
     """
     Tests that the ``get_submissions`` method in ``SynapseOps``
     returns a list of submission IDs.
@@ -107,7 +135,9 @@ def test_get_submissions(mocker, mocked_ops):
             assert result == input_dict["id"]
 
 
-def test_update_submissions_status_with_input_list(mocker, mocked_ops):
+def test_update_submissions_status_with_input_list(
+    mocker: pytest.fixture, mocked_ops: MagicMock
+) -> None:
     """
     Tests that the ``update_submissions_status`` method in ``SynapseOps``
     updates the status of one or more submissions in Synapse.
@@ -128,7 +158,9 @@ def test_update_submissions_status_with_input_list(mocker, mocked_ops):
     )
 
 
-def test_update_submissions_status_with_input_string(mocker, mocked_ops):
+def test_update_submissions_status_with_input_string(
+    mocker: pytest.fixture, mocked_ops: MagicMock
+) -> None:
     """
     Tests that the ``update_submissions_status`` method in ``SynapseOps``
     updates the status of one or more submissions in Synapse.
@@ -168,7 +200,7 @@ def test_update_submission_status_with_non_string_non_list_input():
     assert str(err.value) == error, f"Incorrect error message. Got '{err.value}'"
 
 
-def test_update_submission_status_with_non_string_in_list(mocker, mocked_ops):
+def test_update_submission_status_with_non_string_in_list():
     """
     Tests that the ``update_submissions_status`` method in ``SynapseOps``
     raises an error if the input is a list with a non-string element.
