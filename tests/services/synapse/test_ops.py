@@ -96,9 +96,9 @@ def test_trigger_indexing(mocker: pytest.fixture, mocked_ops: MagicMock) -> None
         )
 
 
-def test_get_submissions(mocker: pytest.fixture, mocked_ops: MagicMock) -> None:
+def test_get_submissions_with_status(mocker: pytest.fixture, mocked_ops: MagicMock) -> None:
     """
-    Tests that the ``get_submissions`` method in ``SynapseOps``
+    Tests that the ``get_submissions_with_status`` method in ``SynapseOps``
     returns a list of submission IDs.
 
     Arguments:
@@ -123,7 +123,7 @@ def test_get_submissions(mocker: pytest.fixture, mocked_ops: MagicMock) -> None:
     table_mock.asDataFrame.return_value = pd.DataFrame(input_dict)
 
     # Mock the ``trigger_indexing`` call in SynapseOps() and the tableQuery call
-    # in ``SynapseOps().get_submissions``
+    # in ``SynapseOps().get_submissions_with_status``
     with mocker.patch.object(mocked_ops, "trigger_indexing", return_value=None):
         with mocker.patch.object(syn_mock, "tableQuery", return_value=table_mock):
             # Calling the function to be tested
