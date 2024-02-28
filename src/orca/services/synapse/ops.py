@@ -1,3 +1,6 @@
+"""
+Handles Synapse operations for py-orca services.
+"""
 import logging
 from dataclasses import field
 from functools import cached_property
@@ -71,7 +74,7 @@ class SynapseOps(BaseOps):
 
     def get_submissions(
         self, submission_view: str, submission_status: str = "RECEIVED"
-    ) -> list:
+    ) -> List[str]:
         """
         Get all submissions with desired submission status in a Synapse
         submission view.
