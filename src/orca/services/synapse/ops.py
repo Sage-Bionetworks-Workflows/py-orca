@@ -115,7 +115,7 @@ class SynapseOps(BaseOps):
 
         # Prepare a single submission_id for the for-loop
         if isinstance(submission_ids, str):
-            submission_ids = list(str)
+            submission_ids = [submission_ids]
 
         # Let's catch for anything that was fed that is NOT a str or list of strs
         if not isinstance(submission_ids, list):

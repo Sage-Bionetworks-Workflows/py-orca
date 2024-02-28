@@ -2,7 +2,6 @@ from unittest.mock import MagicMock
 
 import pandas as pd
 import pytest
-import synapseclient
 
 from orca.errors import ConfigError
 from orca.services.synapse import SynapseOps
@@ -91,9 +90,7 @@ def test_get_submissions(mocker, mocked_ops):
 
     # Mocking the table query results
     table_mock = MagicMock()
-    table_mock.asDataFrame.return_value = pd.DataFrame(
-        input_dict
-    )
+    table_mock.asDataFrame.return_value = pd.DataFrame(input_dict)
 
     # Mock the ``trigger_indexing`` call in SynapseOps() and the tableQuery call
     # in ``SynapseOps().get_submissions``
@@ -142,9 +139,8 @@ def test_update_submission_status_with_non_string_non_list_input():
 
     """
     # Test for non-string + non-list submission_ids.
-    error =  "Not a list. ``submission_ids`` must be an int or list of ints."
+    error = "Not a list. ``submission_ids`` must be an int or list of ints."
     with pytest.raises(TypeError) as err:
-
         # Calling the function to be tested
         SynapseOps().update_submissions_status(1234, "SCORED")
 
@@ -163,9 +159,8 @@ def test_update_submission_status_with_non_string_in_list(mocker, mocked_ops):
 
     """
     # Test for non-string elements in list
-    error =  "Non-strings found. ``submission_ids`` must be an int or list of ints."
+    error = "Non-strings found. ``submission_ids`` must be an int or list of ints."
     with pytest.raises(TypeError) as err:
-
         # Calling the function to be tested
         SynapseOps().update_submissions_status(["syn111", 1234], "SCORED")
 
