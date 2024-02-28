@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 import pandas as pd
 import pytest
 
+from challengeutils import utils
 from orca.errors import ConfigError
 from orca.services.synapse import SynapseOps
 
@@ -78,25 +79,25 @@ def test_trigger_indexing(mocker: pytest.fixture, mocked_ops: MagicMock) -> None
     Arguments:
         mocker: A mocker object.
         mocked_ops: A mocked instance of ``SynapseOps``.
-    """
-    # Mocking connection to the Synapse API
-    syn_mock = mocked_ops.client
 
+    """
     # Assigning variable to a fake submission view string
     submission_view = "test_view"
 
     # Using patch to mock the Synapse tableQuery method
-    with mocker.patch.object(syn_mock, "tableQuery"):
+    with mocker.patch.object(mocked_ops.client, "tableQuery"):
         # Calling the function
-        mocked_ops.trigger_indexing(syn_mock, submission_view)
+        mocked_ops.trigger_indexing(submission_view)
 
         # Assertions
-        syn_mock.tableQuery.assert_called_once_with(
+        mocked_ops.client.tableQuery.assert_called_once_with(
             f"select * from {submission_view} limit 1"
         )
 
 
-def test_get_submissions_with_status(mocker: pytest.fixture, mocked_ops: MagicMock) -> None:
+def test_get_submissions_with_status(
+    mocker: pytest.fixture, mocked_ops: MagicMock
+) -> None:
     """
     Tests that the ``get_submissions_with_status`` method in ``SynapseOps``
     returns a list of submission IDs.
@@ -127,7 +128,9 @@ def test_get_submissions_with_status(mocker: pytest.fixture, mocked_ops: MagicMo
     with mocker.patch.object(mocked_ops, "trigger_indexing", return_value=None):
         with mocker.patch.object(syn_mock, "tableQuery", return_value=table_mock):
             # Calling the function to be tested
-            result = mocked_ops.get_submissions_with_status(submission_view, submission_status)
+            result = mocked_ops.get_submissions_with_status(
+                submission_view, submission_status
+            )
 
             # Assertions
             syn_mock.tableQuery.assert_called_once_with(
@@ -137,7 +140,7 @@ def test_get_submissions_with_status(mocker: pytest.fixture, mocked_ops: MagicMo
             assert result == input_dict["id"]
 
 
-def test_update_submissions_status_with_input_list(
+def test_update_submission_status(
     mocker: pytest.fixture, mocked_ops: MagicMock
 ) -> None:
     """
@@ -148,67 +151,37 @@ def test_update_submissions_status_with_input_list(
         mocker: A mocker object.
         mocked_ops: A mocked instance of ``SynapseOps``.
     """
-    # Mocking the ``update_submission_status`` call in ``SynapseOps``
-    mock_update_status = mocker.patch.object(mocked_ops, "update_submissions_status")
+    # Input args
+    submission_status = "APPROVED"
+    submission_id = "1234"
+    etag = "0000"
 
-    # Calling the function to be tested with an input list of strings
-    mocked_ops.update_submissions_status(["submission_1", "submission_2"], "SCORED")
-
-    # Assertions
-    mock_update_status.assert_called_once_with(
-        ["submission_1", "submission_2"], "SCORED"
+    # Mocking the ``change_submission_status`` call in ``SynapseOps.update_submissions_status``
+    status_object = mocked_ops.client.evaluation.SubmissionStatus(
+        id=submission_id,
+        etag=etag,
+        submissionAnnotations={"status": [submission_status]},
+    )
+    mock_change_submission_status = mocker.patch.object(
+        utils, "change_submission_status", return_value=status_object
     )
 
-
-def test_update_submissions_status_with_input_string(
-    mocker: pytest.fixture, mocked_ops: MagicMock
-) -> None:
-    """
-    Tests that the ``update_submissions_status`` method in ``SynapseOps``
-    updates the status of one or more submissions in Synapse.
-
-    Arguments:
-        mocker: A mocker object.
-        mocked_ops: A mocked instance of ``SynapseOps``.
-
-    """
-    # Mocking the ``update_submission_status`` call in ``SynapseOps``
-    mock_update_status = mocker.patch.object(mocked_ops, "update_submissions_status")
-
-    # Calling the function to be tested with an input string
-    mocked_ops.update_submissions_status("submission_1", "RECEIVED")
+    # Calling the function to be tested
+    mocked_ops.update_submission_status(submission_id, submission_status)
 
     # Assertions
-    mock_update_status.assert_called_once_with("submission_1", "RECEIVED")
+    mock_change_submission_status.assert_called_once_with(
+        mocked_ops.client, submissionid=submission_id, status=submission_status
+    )
 
-
-def test_update_submission_status_with_non_string_non_list_input() -> None:
+@pytest.mark.parametrize("submission_id", [(111.0, [111], (111))])
+def test_update_submission_status_with_wrong_data_type(submission_id) -> None:
     """
-    Tests that the ``update_submissions_status`` method in ``SynapseOps``
-    raises an error if the input is neither a string nor a list.
+    Tests that the ``update_submission_status`` method in ``SynapseOps``
+    raises an error if the input is the wrong datatype.
 
     """
-    # Test for non-string + non-list submission_ids.
-    error = "``submission_ids`` must be a string, int, or list of either/both."
-    with pytest.raises(TypeError) as err:
+    # Expect a custom TypeError for incorrect data types
+    with pytest.raises(TypeError, match="``submission_id`` must be a string or int."):
         # Calling the function to be tested
-        SynapseOps().update_submissions_status(1234, "SCORED")
-
-    # Assertions
-    assert str(err.value) == error, f"Incorrect error message. Got '{err.value}'"
-
-
-def test_update_submission_status_with_float_in_list() -> None:
-    """
-    Tests that the ``update_submissions_status`` method in ``SynapseOps``
-    raises an error if the input is a list with a non-string element.
-
-    """
-    # Test for non-string elements in list
-    error = "``submission_ids`` must be a string, int, or list of either/both."
-    with pytest.raises(TypeError) as err:
-        # Calling the function to be tested
-        SynapseOps().update_submissions_status(["syn111", 1234], "SCORED")
-
-    # Assertions
-    assert str(err.value) == error, f"Incorrect error message. Got '{err.value}'"
+        SynapseOps().update_submission_status(submission_id, "SCORED")

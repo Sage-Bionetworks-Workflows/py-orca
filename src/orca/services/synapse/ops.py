@@ -122,5 +122,5 @@ class SynapseOps(BaseOps):
 
         # Update submission status
         utils.change_submission_status(
-            self.client, submissionid=id, status=submission_status
+            self.client, submissionid=submission_id, status=submission_status
         )
