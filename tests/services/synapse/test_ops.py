@@ -213,7 +213,7 @@ def test_update_submission_status_with_non_string_in_list() -> None:
 
     """
     # Test for non-string elements in list
-    error = "Non-strings found. ``submission_ids`` must be a string or list of strings."
+    error = "Invalid type. ``submission_ids`` must be a string or list of strings."
     with pytest.raises(TypeError) as err:
         # Calling the function to be tested
         SynapseOps().update_submissions_status(["syn111", 1234], "SCORED")

@@ -127,7 +127,7 @@ class SynapseOps(BaseOps):
             )
         if not all(isinstance(id, str) for id in submission_ids):
             raise TypeError(
-                "Non-strings found. ``submission_ids`` must be a string or list of strings."
+                "Invalid type. ``submission_ids`` must be a string or list of strings."
             )
 
         # Update submission status(es)
