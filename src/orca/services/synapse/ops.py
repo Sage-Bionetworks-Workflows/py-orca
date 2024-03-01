@@ -107,7 +107,7 @@ class SynapseOps(BaseOps):
         submission_status: str,
     ) -> None:
         """
-        Update the status of one or more submissions in Synapse.
+        Update the status of a submission in Synapse.
         Status can be one of:
         https://rest-docs.synapse.org/rest/org/sagebionetworks/evaluation/model/SubmissionStatusEnum.html
 
