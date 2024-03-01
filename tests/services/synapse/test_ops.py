@@ -95,6 +95,26 @@ def test_trigger_indexing(mocker: pytest.fixture, mocked_ops: MagicMock) -> None
         )
 
 
+def test_is_valid_submission_status():
+    """
+    Tests that the ``is_valid_submission_status`` method in ``SynapseOps``
+    returns a boolean indicating if the submission status is valid.
+
+    """
+    submission_status = "receiveD"
+    assert SynapseOps().is_valid_submission_status(submission_status)
+
+
+def test_is_valid_submission_status_incorrect_status():
+    """
+    Tests that the ``is_valid_submission_status`` method in ``SynapseOps``
+    returns a boolean indicating if the submission status is valid.
+
+    """
+    submission_status = "receved"
+    assert not SynapseOps().is_valid_submission_status(submission_status)
+
+
 def test_get_submissions_with_status(
     mocker: pytest.fixture, mocked_ops: MagicMock
 ) -> None:
@@ -138,6 +158,21 @@ def test_get_submissions_with_status(
             )
             table_mock.asDataFrame.assert_called()
             assert result == input_dict["id"]
+
+
+def test_get_submissions_with_status_incorrect_status():
+    """
+    Tests that the ``get_submissions_with_status`` method in ``SynapseOps``
+    returns a list of submission IDs.
+
+    """
+    submission_view = "syn111"
+    submission_status = "oops"
+    error_message = f"Invalid submission status '{submission_status}'"
+
+    # No need to mock anything here as it will fail before call to tableQuery
+    with pytest.raises(ValueError, match=error_message):
+        SynapseOps().get_submissions_with_status(submission_view, submission_status)
 
 
 def test_update_submission_status(

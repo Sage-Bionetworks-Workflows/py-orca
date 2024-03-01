@@ -72,12 +72,42 @@ class SynapseOps(BaseOps):
         """
         self.client.tableQuery(f"select * from {synapse_view} limit 1")
 
+    def is_valid_submission_status(self, submission_status: str) -> bool:
+        """
+        Check if submission status is valid. Based on:
+        https://rest-docs.synapse.org/rest/org/sagebionetworks/evaluation/model/SubmissionStatusEnum.html
+
+        Arguments:
+            submission_status: The submission status to check.
+
+        Returns:
+            Boolean indicating if submission status is valid.
+        """
+
+        # List all the available status options based on API docs
+        status_options = [
+            "OPEN",
+            "CLOSED",
+            "SCORED",
+            "INVALID",
+            "VALIDATED",
+            "EVALUATION_IN_PROGRESS",
+            "RECEIVED",
+            "REJECTED",
+        ]
+        # Ensure that input status is valid (case-sensitive)
+        if submission_status.upper() not in status_options:
+            return False
+
+        return True
+
     def get_submissions_with_status(
         self, submission_view: str, submission_status: str = "RECEIVED"
     ) -> List[str]:
         """
         Get all submissions with desired submission status in a Synapse
-        submission view.
+        submission view. Status can be one of:
+        https://rest-docs.synapse.org/rest/org/sagebionetworks/evaluation/model/SubmissionStatusEnum.html
 
         Arguments:
             submission_view: The Synapse ID of the table view to get submissions from.
@@ -88,6 +118,11 @@ class SynapseOps(BaseOps):
             A list of submission IDs.
 
         """
+        # Check if submission status is valid
+        if not self.is_valid_submission_status(submission_status):
+            message = f"Invalid submission status '{submission_status}'"
+            raise ValueError(message)
+
         # Trigger indexing
         self.trigger_indexing(submission_view)
 
@@ -107,6 +142,8 @@ class SynapseOps(BaseOps):
     ) -> None:
         """
         Update the status of one or more submissions in Synapse.
+        Status can be one of:
+        https://rest-docs.synapse.org/rest/org/sagebionetworks/evaluation/model/SubmissionStatusEnum.html
 
         Arguments:
             submission_ids: The Synapse ID of the submission.
