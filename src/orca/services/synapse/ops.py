@@ -72,7 +72,6 @@ class SynapseOps(BaseOps):
         """
         self.client.tableQuery(f"select * from {synapse_view} limit 1")
 
-
     def get_submissions_with_status(
         self, submission_view: str, submission_status: str = "RECEIVED"
     ) -> List[str]:
