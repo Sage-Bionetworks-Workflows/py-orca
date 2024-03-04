@@ -246,7 +246,13 @@ package:
 
 ### Releases
 
-If you are part of the group of maintainers and have correct user permissions
+If you are a member of the DPE team at Sage Bionetworks, you can simply publish a new release on GitHub in the Releases tab.
+
+1. Create a new tag which is unique and incremental to the previous version. This repository uses [Semantic Versioning](https://semver.org/).
+1. Monitor the GitHub Action which will be triggered by the new release.
+1. Once the Action is complete, ensure that the new release is published to PyPI and can be installed.
+
+If you are NOT a member of the DPE team at Sage Bionetworks, but you are part of the group of maintainers and have correct user permissions
 on [PyPI], the following steps can be used to release a new version for
 `orca`:
 
