@@ -97,7 +97,7 @@ class SynapseOps(BaseOps):
             f"select id from {submission_view} where status = '{submission_status}'"
         )
 
-        submission_ids = query_results.asDataFrame().tolist()
+        submission_ids = query_results.asDataFrame()["id"].tolist()
 
         return submission_ids
 
