@@ -134,7 +134,7 @@ def test_get_submissions_with_status(
 
             # Assertions
             syn_mock.tableQuery.assert_called_once_with(
-                f"select * from {submission_view} where status = '{submission_status}'"
+                f"select id from {submission_view} where status = '{submission_status}'"
             )
             table_mock.asDataFrame.assert_called()
             assert result == input_dict["id"]

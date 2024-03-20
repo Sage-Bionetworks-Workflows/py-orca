@@ -94,7 +94,7 @@ class SynapseOps(BaseOps):
 
         # Get all submissions for the given ``submission_view``
         query_results = self.client.tableQuery(
-            f"select * from {submission_view} where status = '{submission_status}'"
+            f"select id from {submission_view} where status = '{submission_status}'"
         )
 
         submission_ids = query_results.asDataFrame()["id"].tolist()
