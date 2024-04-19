@@ -95,9 +95,10 @@ class RnaseqDataset:
         """Generate LaunchInfo for nf-synindex."""
         return LaunchInfo(
             run_name=self.get_run_name("synindex"),
-            pipeline="Sage-Bionetworks-Workflows/nf-synindex",
+            pipeline="Sage-Bionetworks-Workflows/nf-synapse",
             revision="main",
-            profiles=["sage"],
+            profiles=["docker"],
+            entry_name="NF_SYNINDEX",
             params={
                 "s3_prefix": rnaseq_outdir_uri,
                 "parent_id": self.output_folder,
