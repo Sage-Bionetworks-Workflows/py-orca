@@ -38,7 +38,7 @@ python3 -m pip install 'py-orca[all]' 'metaflow' 'pyyaml' 's3fs'
 
 Before running the example below, ensure that the `s3_prefix` points to an S3 bucket your Nextflow `dev`
 or `prod` tower workspace has access to. In the example below, we will point to the `example-dev-project-tower-scratch` S3 bucket because we will be launching our workflows within the
-`example-dev-project` workspace in `tower-dev`. In this case, you can use either of the `workflows-nextflow-dev` profiles to access the S3 bucket. 
+`example-dev-project` workspace in `tower-dev`. In this case, you can use either of the `workflows-nextflow-dev` profiles to access the S3 bucket.
 ```bash
 # Run the script using an example dataset
 python3 demo.py run --dataset_id 'syn51514585' --s3_prefix 's3://example-dev-project-tower-scratch/work'
