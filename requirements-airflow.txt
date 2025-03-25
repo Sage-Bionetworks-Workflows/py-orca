@@ -1,2 +1,2 @@
--c https://raw.githubusercontent.com/apache/airflow/constraints-2.9.3/constraints-3.10.txt
-apache-airflow==2.9.3
+-c https://raw.githubusercontent.com/apache/airflow/constraints-2.10.5/constraints-3.10.txt
+apache-airflow==2.10.5
