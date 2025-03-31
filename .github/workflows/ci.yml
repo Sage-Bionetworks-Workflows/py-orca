@@ -94,7 +94,7 @@ jobs:
           SYNAPSE_CONNECTION_URI: ${{ secrets.SYNAPSE_CONNECTION_URI }}
         run: >-
           tox --installpkg '${{ needs.prepare.outputs.wheel-path }}'
-          -- -rFEx --durations 10 --color yes
+          -- -rFEx --durations 10 --color yes -n 4
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
