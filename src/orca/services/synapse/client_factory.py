@@ -35,7 +35,7 @@ class SynapseClientFactory(BaseClientFactory):
         Returns:
             An authenticated client object.
         """
-        client = Synapse(silent=True)
+        client = Synapse(silent=True, skip_checks=True)
         auth_token = self.config.auth_token
 
         if auth_token is None:
