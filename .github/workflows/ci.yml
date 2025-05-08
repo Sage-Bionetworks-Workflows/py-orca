@@ -26,6 +26,8 @@ concurrency:
 jobs:
   prepare:
     runs-on: ubuntu-latest
+    permissions:
+      actions: write
     outputs:
       wheel-path: ${{ steps.distribution-paths.outputs.wheel }}
       tarball-path: ${{ steps.distribution-paths.outputs.tarball }}
@@ -54,12 +56,9 @@ jobs:
           name: python-distribution-files
           path: dist/
           retention-days: 1
-        # Prevent scheduled workflow from ever being paused
       - name: Keepalive Workflow
-        uses: gautamkrishnar/keepalive-workflow@2.0.10
-        with:
-          time_elapsed: 44
-          gh_token: ${{ secrets.GITHUB_TOKEN }}
+        uses: liskin/gh-workflow-keepalive@v1
+        if: github.event_name == 'schedule'
 
   test:
     needs: prepare
