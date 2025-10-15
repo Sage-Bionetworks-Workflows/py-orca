@@ -46,8 +46,7 @@ class RnaseqDataset:
             run_name=run_name,
             pipeline="Sage-Bionetworks-Workflows/nf-synapse",
             revision="main",
-            profiles=["docker"],
-            entry_name="NF_SYNSTAGE",
+            profiles=["docker", "synstage"],
             params={
                 "input": samplesheet_uri,
             },
@@ -97,8 +96,7 @@ class RnaseqDataset:
             run_name=self.get_run_name("synindex"),
             pipeline="Sage-Bionetworks-Workflows/nf-synapse",
             revision="main",
-            profiles=["docker"],
-            entry_name="NF_SYNINDEX",
+            profiles=["docker", "synindex"],
             params={
                 "s3_prefix": rnaseq_outdir_uri,
                 "parent_id": self.output_folder,
