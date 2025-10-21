@@ -45,7 +45,7 @@ class RnaseqDataset:
         return LaunchInfo(
             run_name=run_name,
             pipeline="Sage-Bionetworks-Workflows/nf-synapse",
-            revision="main",
+            revision="dpe-695-fix-extra-slashes",
             profiles=["docker", "synstage"],
             params={
                 "input": samplesheet_uri,
@@ -196,19 +196,6 @@ class TowerRnaseqFlow(FlowSpec):
     def monitor_rnaseq(self):
         """Monitor nf-core/rnaseq workflow run (wait until done)."""
         self.monitor_workflow(self.rnaseq_id)
-        self.next(self.launch_synindex)
-
-    @step
-    def launch_synindex(self):
-        """Launch nf-synindex to index S3 files back into Synapse."""
-        launch_info = self.dataset.synindex_info(self.rnaseq_outdir)
-        self.synindex_id = self.tower.launch_workflow(launch_info, "spot")
-        self.next(self.monitor_synindex)
-
-    @step
-    def monitor_synindex(self):
-        """Monitor nf-synindex workflow run (wait until done)."""
-        self.monitor_workflow(self.synindex_id)
         self.next(self.end)
 
     @step
