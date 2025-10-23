@@ -45,7 +45,7 @@ class RnaseqDataset:
         return LaunchInfo(
             run_name=run_name,
             pipeline="Sage-Bionetworks-Workflows/nf-synapse",
-            revision="dpe-695-fix-extra-slashes",
+            revision="main",
             profiles=["docker", "synstage"],
             params={
                 "input": samplesheet_uri,
