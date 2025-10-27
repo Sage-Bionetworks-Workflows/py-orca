@@ -204,7 +204,6 @@ class TowerRnaseqFlow(FlowSpec):
         print(f"Completed processing {self.dataset}")
         print(f"synstage workflow ID: {self.synstage_id}")
         print(f"nf-core/rnaseq workflow ID: {self.rnaseq_id}")
-        print(f"synindex workflow ID: {self.synindex_id}")
 
 
 if __name__ == "__main__":
