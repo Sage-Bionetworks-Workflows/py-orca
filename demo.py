@@ -180,22 +180,6 @@ class TowerRnaseqFlow(FlowSpec):
     def monitor_synstage(self):
         """Monitor nf-synapse/synstage workflow run (wait until done)."""
         self.monitor_workflow(self.synstage_id)
-        self.next(self.launch_rnaseq)
-
-    @step
-    def launch_rnaseq(self):
-        """Launch nf-core/rnaseq workflow to process RNA-seq data."""
-        staged_uri = self.get_staged_samplesheet(
-            self.samplesheet_uri, self.dataset.get_run_name("synstage")
-        )
-        launch_info = self.dataset.rnaseq_info(staged_uri, self.rnaseq_outdir)
-        self.rnaseq_id = self.tower.launch_workflow(launch_info, "spot")
-        self.next(self.monitor_rnaseq)
-
-    @step
-    def monitor_rnaseq(self):
-        """Monitor nf-core/rnaseq workflow run (wait until done)."""
-        self.monitor_workflow(self.rnaseq_id)
         self.next(self.end)
 
     @step
@@ -203,7 +187,6 @@ class TowerRnaseqFlow(FlowSpec):
         """End point."""
         print(f"Completed processing {self.dataset}")
         print(f"synstage workflow ID: {self.synstage_id}")
-        print(f"nf-core/rnaseq workflow ID: {self.rnaseq_id}")
 
 
 if __name__ == "__main__":
