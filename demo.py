@@ -8,6 +8,7 @@ See README.md for instructions on how to run this script.
 """
 
 import asyncio
+import uuid
 from dataclasses import dataclass
 from pathlib import PurePosixPath
 from textwrap import dedent
@@ -37,7 +38,7 @@ class RnaseqDataset:
 
     def get_run_name(self, suffix: str) -> str:
         """Generate run name with given suffix."""
-        return f"{self.id}_{suffix}"
+        return f"{self.id}_{suffix}_{uuid.uuid4()}"
 
     def synstage_info(self, samplesheet_uri: str) -> LaunchInfo:
         """Generate LaunchInfo for nf-synapse/synstage."""
