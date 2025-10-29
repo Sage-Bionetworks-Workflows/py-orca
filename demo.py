@@ -135,7 +135,7 @@ class TowerRnaseqFlow(FlowSpec):
 
     def monitor_workflow(self, workflow_id):
         """Monitor any workflow run (wait until done)."""
-        monitor_coro = self.tower.monitor_workflow(workflow_id)
+        monitor_coro = self.tower.monitor_workflow(workflow_id, wait_time=60 * 1)
         status = asyncio.run(monitor_coro)
         if not status.is_successful:
             message = f"Workflow did not complete successfully ({status})."
