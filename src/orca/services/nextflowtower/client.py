@@ -1,6 +1,5 @@
-from typing import Any, Optional
-
 import warnings
+from typing import Any, Optional
 
 import requests
 from pydantic.dataclasses import dataclass
@@ -109,8 +108,8 @@ class NextflowTowerClient:
                 total size.
 
         Returns:
-            A dict with ``totalSize`` (or ``total``) and the items key mapped to the full
-            combined list across all pages.
+            A dict with ``totalSize`` (or ``total``) and the items key mapped
+            to the full combined list across all pages.
         """
         # Ensure defaults for pagination query parameters
         self.update_kwarg(kwargs, "params", "max", 50)
@@ -126,14 +125,17 @@ class NextflowTowerClient:
             total_size = json.pop("totalSize", None) or json.pop("total", 0)
             list_keys = [(k, v) for k, v in json.items() if isinstance(v, list)]
             if not list_keys:
+                received = {k: type(v).__name__ for k, v in json.items()}
                 raise HTTPError(
                     f"Paged response contained no list-valued key. "
-                    f"Received keys/types: { {k: type(v).__name__ for k, v in json.items()} }"
+                    f"Received keys/types: {received}"
                 )
             if len(list_keys) > 1:
                 warnings.warn(
                     f"Paged response contained multiple list-valued keys: "
-                    f"{[k for k, _ in list_keys]}. Using the first: '{list_keys[0][0]}'."
+                    f"{[k for k, _ in list_keys]}. "
+                    f"Using the first: '{list_keys[0][0]}'.",
+                    stacklevel=2,
                 )
             key_name, items = list_keys[0]
             num_items += len(items)
