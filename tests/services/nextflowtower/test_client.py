@@ -192,7 +192,6 @@ def test_that_request_paged_warns_when_multiple_list_keys(client, mocker):
 
 
 def test_that_request_paged_tolerates_extra_boolean_fields(client, mocker):
-    """Regression test: API adding boolean fields alongside the list should not crash."""
     mock = mocker.patch.object(client, "request_json")
     mock.return_value = {
         "totalSize": 1,
