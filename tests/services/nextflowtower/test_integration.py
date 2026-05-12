@@ -24,20 +24,17 @@ def ops(config):
 
 
 @pytest.mark.integration
-@pytest.mark.xdist_group("tower")
 def test_that_the_config_can_pull_information_from_env(config):
     assert config.auth_token
     assert config.api_endpoint
 
 
 @pytest.mark.integration
-@pytest.mark.xdist_group("tower")
 def test_that_a_valid_client_can_be_constructed_and_tested(client):
     assert client.list_user_workspaces()
 
 
 @pytest.mark.integration
-@pytest.mark.xdist_group("tower")
 def test_that_a_workflow_can_be_launched(ops):
     launch_info = models.LaunchInfo(
         pipeline="nextflow-io/hello",
@@ -48,7 +45,6 @@ def test_that_a_workflow_can_be_launched(ops):
 
 
 @pytest.mark.integration
-@pytest.mark.xdist_group("tower")
 def test_that_a_workflow_can_be_retrieved(ops):
     launch_info = models.LaunchInfo(
         pipeline="nextflow-io/hello",
@@ -60,7 +56,6 @@ def test_that_a_workflow_can_be_retrieved(ops):
 
 
 @pytest.mark.integration
-@pytest.mark.xdist_group("tower")
 def test_that_a_workflow_can_be_relaunched(ops):
     launch_info = models.LaunchInfo(
         pipeline="nextflow-io/hello",
