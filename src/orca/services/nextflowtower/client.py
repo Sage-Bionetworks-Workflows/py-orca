@@ -1,5 +1,7 @@
 from typing import Any, Optional
 
+import warnings
+
 import requests
 from pydantic.dataclasses import dataclass
 from requests.exceptions import HTTPError
@@ -91,16 +93,24 @@ class NextflowTowerClient:
         return response.json()
 
     def request_paged(self, method: str, path: str, **kwargs) -> dict[str, Any]:
-        """Iterate through pages of results for a given request.
+        """Paginate through all pages of a paged API endpoint and collect results.
+
+        Sends repeated requests, incrementing the offset each time, until all
+        items have been retrieved. Expects each response to contain a size key
+        (``totalSize`` or ``total``) and exactly one list-valued key holding
+        the items for that page. Warns if multiple list-valued keys are found
+        and uses the first. Raises if no list-valued key is found.
 
         See ``TowerClient.request`` for argument definitions.
 
         Raises:
-            HTTPError: If the response doesn't match the expectation
-                for a paged endpoint.
+            HTTPError: If the response contains no list-valued key, or if the
+                total number of collected items does not match the declared
+                total size.
 
         Returns:
-            The cumulative list of items from all pages.
+            A dict with ``totalSize`` (or ``total``) and the items key mapped to the full
+            combined list across all pages.
         """
         # Ensure defaults for pagination query parameters
         self.update_kwarg(kwargs, "params", "max", 50)
@@ -114,7 +124,18 @@ class NextflowTowerClient:
             kwargs["params"]["offset"] = num_items
             json = self.request_json(method, path, **kwargs)
             total_size = json.pop("totalSize", None) or json.pop("total", 0)
-            key_name, items = json.popitem()
+            list_keys = [(k, v) for k, v in json.items() if isinstance(v, list)]
+            if not list_keys:
+                raise HTTPError(
+                    f"Paged response contained no list-valued key. "
+                    f"Received keys/types: { {k: type(v).__name__ for k, v in json.items()} }"
+                )
+            if len(list_keys) > 1:
+                warnings.warn(
+                    f"Paged response contained multiple list-valued keys: "
+                    f"{[k for k, _ in list_keys]}. Using the first: '{list_keys[0][0]}'."
+                )
+            key_name, items = list_keys[0]
             num_items += len(items)
             all_items.extend(items)
 
