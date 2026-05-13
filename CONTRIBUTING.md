@@ -302,3 +302,17 @@ on [PyPI], the following steps can be used to release a new version for
 [virtualenv]: https://virtualenv.pypa.io/en/stable/
 [repository]: https://github.com/sage-bionetworks-workflows/py-orca
 [issue tracker]: https://github.com/sage-bionetworks-workflows/py-orca/issues
+
+---
+
+## Troubleshooting CI
+
+> This is a living document. As new CI failures are diagnosed and resolved, add them here so future contributors don't have to rediscover the same issues.
+
+### Integration tests fail with `401 Unauthorized` or unexpected API errors
+
+**Symptom:** Integration tests (e.g., `test_that_a_workflow_can_be_launched`) fail in CI with authentication or API errors, even though the tests pass locally.
+
+**Cause:** The `NEXTFLOWTOWER_CONNECTION_URI` GitHub Actions secret MAY contain an expired or outdated API token.
+
+**Fix:** Regenerate a valid Nextflow Tower API token following the format outlined in `.env.example` and update the secret in the repository's GitHub Actions settings (`Settings > Secrets and variables > Actions > NEXTFLOWTOWER_CONNECTION_URI`).

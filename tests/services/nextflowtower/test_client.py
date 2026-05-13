@@ -1,3 +1,5 @@
+import warnings
+
 import pytest
 from requests.exceptions import HTTPError
 
@@ -166,3 +168,35 @@ def test_that_get_task_logs_works(client, mocker, get_response):
     )
     mock.assert_called()
     assert result == "Ciao world!"
+
+
+def test_that_request_paged_raises_when_no_list_key(client, mocker):
+    mock = mocker.patch.object(client, "request_json")
+    mock.return_value = {"totalSize": 1, "hasMore": True}
+    with pytest.raises(HTTPError, match="no list-valued key"):
+        client.list_labels(98765)
+
+
+def test_that_request_paged_warns_when_multiple_list_keys(client, mocker):
+    mock = mocker.patch.object(client, "request_json")
+    mock.return_value = {
+        "totalSize": 1,
+        "labels": [{"id": 1, "name": "foo", "value": None, "resource": False}],
+        "extras": [{"id": 2}],
+    }
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        client.list_labels(98765)
+    assert len(caught) == 1
+    assert "multiple list-valued keys" in str(caught[0].message)
+
+
+def test_that_request_paged_tolerates_extra_boolean_fields(client, mocker):
+    mock = mocker.patch.object(client, "request_json")
+    mock.return_value = {
+        "totalSize": 1,
+        "labels": [{"id": 1, "name": "foo", "value": None, "resource": False}],
+        "hasMoreEntries": True,
+    }
+    result = client.list_labels(98765)
+    assert len(result) == 1
