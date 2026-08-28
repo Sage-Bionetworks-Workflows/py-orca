@@ -2,6 +2,16 @@
 
 > Python package for connecting services and building data pipelines
 
+```{warning}
+**`py-orca` is deprecated and is no longer actively maintained.**
+
+For launching and monitoring Nextflow workflows from Python, use
+[`seqerakit`](https://github.com/seqeralabs/seqera-kit), Seqera's official wrapper
+around the [Seqera Platform CLI](https://github.com/seqeralabs/tower-cli). The
+[project README](readme) includes migration instructions and a mapping from `py-orca`
+concepts to their `seqerakit` equivalents.
+```
+
 
 ## Note
 

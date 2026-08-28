@@ -13,6 +13,16 @@ finally:
     del version, PackageNotFoundError
 
 import logging
+import warnings
+
+warnings.warn(
+    "py-orca is deprecated and is no longer actively maintained. For launching and "
+    "monitoring Nextflow workflows from Python, use seqerakit instead: "
+    "https://github.com/seqeralabs/seqera-kit. See the py-orca README for migration "
+    "instructions.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 # Capture warnings made with the warnings standard module
 logging.captureWarnings(True)
