@@ -31,7 +31,34 @@
 
 This Python package provides the components to connect various third-party services such as Synapse, Nextflow Tower, and SevenBridges to build data pipelines using a workflow management system like Airflow.
 
-## Demonstration Script
+## Demonstration Scripts
+
+This repository includes two demonstration scripts that run the same three-step RNA-seq
+pipeline (`nf-synapse/synstage`, `nf-core/rnaseq`, `nf-synapse/synindex`) with
+[Metaflow](https://metaflow.org/) as the orchestrator:
+
+- [**`demo_seqerakit.py`**](demo_seqerakit.py) — **recommended.** Uses
+  [`seqerakit`](https://github.com/seqeralabs/seqera-kit) and
+  [`synapseclient`](https://python-docs.synapse.org/) instead of `py-orca`. See
+  [Launching Nextflow workflows from Python with `seqerakit`](#launching-nextflow-workflows-from-python-with-seqerakit)
+  for background, and the script's module docstring for setup and usage:
+
+  ```bash
+  # The Seqera Platform CLI (`tw`) must be installed and on your PATH
+  python3 -m pip install seqerakit synapseclient metaflow s3fs pyyaml
+  export TOWER_ACCESS_TOKEN='<your-seqera-platform-access-token>'
+  export SYNAPSE_AUTH_TOKEN='<your-synapse-access-token>'
+
+  python3 demo_seqerakit.py run \
+      --dataset_id 'syn51514585' \
+      --s3_prefix 's3://example-dev-project-tower-scratch/work' \
+      --workspace 'my-org/example-dev-project'
+  ```
+
+- [`demo.py`](demo.py) — the original `py-orca` version, kept for reference. **Deprecated**;
+  it is described below and is not recommended for new work.
+
+### Deprecated: the original `py-orca` demo
 
 This repository includes a demonstration script called [`demo.py`](demo.py), which showcases how you can use `py-orca` to launch and monitor your workflows on Nextflow Tower. Specifically, it illustrates how to process an RNA-seq dataset using a series of workflow runs, namely `nf-synapse/synstage`, `nf-core/rnaseq`, and `nf-synapse/synindex`. `py-orca` can be used with any Python-compatible workflow management system to orchestrate each step (_e.g._ Airflow, Prefect, Dagster). The demonstration script uses [Metaflow](https://metaflow.org/) because it's easy to run locally and has an intuitive syntax.
 
@@ -87,9 +114,18 @@ Seqera against the current Platform API.
 `seqerakit` shells out to the `tw` CLI, so both must be installed and on your `PATH`:
 
 ```bash
-# 1. Install the Seqera Platform CLI (v0.11.0+); see the tower-cli README for
-#    other platforms and for the Homebrew/Conda options.
-#    https://github.com/seqeralabs/tower-cli#installation
+# 1. Install the Seqera Platform CLI (v0.11.0+). It is a single binary published on the
+#    tower-cli releases page: https://github.com/seqeralabs/tower-cli/releases
+#    Pick the asset for your machine: tw-osx-arm64 (Apple silicon), tw-osx-x86_64
+#    (Intel Mac), or tw-linux-x86_64. Each release also has a checksums_sha256.txt.
+TW_VERSION=v0.42.0
+TW_ASSET=tw-osx-arm64
+mkdir -p ~/.local/bin
+curl -fL -o ~/.local/bin/tw \
+    "https://github.com/seqeralabs/tower-cli/releases/download/${TW_VERSION}/${TW_ASSET}"
+chmod +x ~/.local/bin/tw
+export PATH="$HOME/.local/bin:$PATH"   # add this line to ~/.zshrc or ~/.bashrc to keep it
+tw --version
 
 # 2. Install seqerakit (Python 3.10+)
 pip install seqerakit
@@ -103,13 +139,62 @@ standard environment variables rather than from a `*_CONNECTION_URI`:
 ```bash
 export TOWER_ACCESS_TOKEN='<your-seqera-platform-access-token>'
 
-# Only needed for Seqera Enterprise; omit for Seqera Cloud (cloud.seqera.io)
-export TOWER_API_ENDPOINT='https://<your-tower-host>/api'
+# Required for self-hosted Seqera Platform (Enterprise), such as Sage's Tower dev
+# instance; omit for Seqera Cloud (cloud.seqera.io)
+export TOWER_API_ENDPOINT='https://tower-dev.sagebionetworks.org/api/'
 ```
+
+Never commit or paste your access token anywhere shared. If one leaks, revoke it under
+**Your tokens** in the Seqera Platform UI.
 
 If your pipeline reads from or writes to S3 (as the Sage compute environments do), keep
 exporting `AWS_PROFILE` — or another source of AWS credentials — exactly as you did for
 `demo.py`.
+
+## Quick check: launching `nf-canary`
+
+[`seqeralabs/nf-canary`](https://github.com/seqeralabs/nf-canary) is a small pipeline
+that checks whether a compute environment works. It needs no inputs, so it's a good first
+run to confirm that your token, endpoint, workspace, and compute environment are all set
+up correctly:
+
+```python
+from seqerakit import seqeraplatform
+
+tw = seqeraplatform.SeqeraPlatform(json=True)
+
+result = tw.launch(
+    "--workspace", "Sage-Bionetworks/example-dev-project",
+    "--compute-env", "manual-shared-ce-dev-project-ondemand-v13",
+    "--name", "my-test",
+    "--work-dir", "s3://example-dev-project-tower-scratch/work",
+    "https://github.com/seqeralabs/nf-canary",
+)
+print(result["workflowUrl"])
+```
+
+On success, `result` looks like this:
+
+```python
+{
+    "workflowId": "5UrutbeFgspgt4",
+    "workflowUrl": "https://tower-dev.sagebionetworks.org/orgs/Sage-Bionetworks/workspaces/example-dev-project/watch/5UrutbeFgspgt4",
+    "workspaceId": 126047213146763,
+    "workspaceRef": "[Sage-Bionetworks / example-dev-project]",
+}
+```
+
+### Common launch errors
+
+`seqerakit` raises `ResourceNotFoundError` or `CommandError` with the error message from
+`tw`. These are the ones you're most likely to see:
+
+| Error from `tw` | Cause and fix |
+| --- | --- |
+| `Pipeline 'seqeralabs/nf-canary' not found` | `tw` treats a bare `org/repo` as the name of a pipeline saved in the workspace's **Launchpad**. To launch straight from GitHub, pass the full URL instead, e.g. `https://github.com/seqeralabs/nf-canary`. |
+| `Run name must start with a letter, and contain a maximum of 80 alphanumeric characters separated by dashes or underscores` | `--name` can't contain spaces or other punctuation. Use e.g. `my-test` or `my_test`, not `my test`. |
+| `Unknown pipeline profile: sage` | The pipeline doesn't define that profile. `sage` comes from nf-core's [institutional configs](https://github.com/nf-core/configs), so it only works with nf-core pipelines (e.g. `nf-core/rnaseq`). Leave out `--profile` for pipelines like `nf-canary`. |
+| `/bin/sh: tw: command not found` | The `tw` CLI isn't on your `PATH`; see [Prerequisites](#prerequisites). |
 
 ## Launching a run from Python
 
@@ -131,7 +216,7 @@ result = tw.launch(
     "--profile", "sage",
     "--work-dir", "s3://example-dev-project-tower-scratch/work",
     "--params-file", "rnaseq-params.yaml",
-    "nf-core/rnaseq",
+    "https://github.com/nf-core/rnaseq",
 )
 
 workflow_id = result["workflowId"]
@@ -166,7 +251,7 @@ tw.launch(
     "--compute-env", "my-spot-compute-env",
     "--name", "my_test_dataset_rnaseq",
     "--wait", "SUCCEEDED",
-    "nf-core/rnaseq",
+    "https://github.com/nf-core/rnaseq",
 )
 ```
 
@@ -207,7 +292,7 @@ launch:
   - name: 'my_test_dataset_rnaseq'
     workspace: 'my-org/my-project'
     compute-env: 'my-spot-compute-env'
-    pipeline: 'nf-core/rnaseq'
+    pipeline: 'https://github.com/nf-core/rnaseq'
     revision: '3.11.2'
     profile: 'sage'
     work-dir: 's3://example-dev-project-tower-scratch/work'
@@ -231,7 +316,7 @@ already exist can be managed as code.
 | --- | --- |
 | `NEXTFLOWTOWER_CONNECTION_URI` | `TOWER_ACCESS_TOKEN` (+ `TOWER_API_ENDPOINT` for Enterprise) |
 | `NextflowTowerOps()` | `seqeraplatform.SeqeraPlatform()` |
-| `LaunchInfo(pipeline=..., run_name=...)` | `tw.launch("<pipeline>", "--name", ...)` |
+| `LaunchInfo(pipeline=..., run_name=...)` | `tw.launch("--name", ..., "<pipeline URL or Launchpad name>")` |
 | `LaunchInfo(params={...})` | `--params-file params.yaml` or `params:` in YAML |
 | `LaunchInfo(profiles=[...])` | `--profile a,b` |
 | `LaunchInfo(revision=...)` | `--revision` |
