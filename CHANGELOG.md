@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Deprecations
+
+- **`py-orca` is deprecated and is no longer actively maintained.** Importing `orca` now
+  emits a `DeprecationWarning`.
+- For launching and monitoring Nextflow workflows from Python, migrate to
+  [`seqerakit`](https://github.com/seqeralabs/seqera-kit), Seqera's official Python
+  wrapper around the Seqera Platform CLI. See the README for migration instructions and a
+  mapping from `py-orca` concepts to their `seqerakit` equivalents.
+
 ## Version 1.0.1
 
 ### Fixes
